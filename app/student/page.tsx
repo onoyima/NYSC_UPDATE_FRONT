@@ -144,15 +144,15 @@ const StudentDashboard: React.FC = () => {
                   {/* Welcome Message */}
                   <div className="mb-4">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Welcome back, {student.name || student.firstName}!
+                      {/* Welcome back, {student.name || student.firstName}! */}
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Matric: {student.matric_no} | {typeof student.department === 'object' ? student.department?.name || 'N/A' : student.department || 'N/A'}
+                      {/* Matric: {student.matric_no} | {typeof student.department === 'object' ? student.department?.name || 'N/A' : student.department || 'N/A'} */}
                     </p>
                   </div>
                   
                   {/* Mobile Deadline Counter - After welcome message on small screens */}
-                  <div className="lg:hidden mb-4">
+                  {/* <div className="lg:hidden mb-4">
                     {systemStatus && (
                       <CountdownTimer
                         deadline={systemStatus.deadline}
@@ -163,7 +163,7 @@ const StudentDashboard: React.FC = () => {
                         className="animate-fade-in-up"
                       />
                     )}
-                  </div>
+                  </div> */}
                 </div>
                 
                 {/* Desktop Deadline Counter - Sticky on right edge for large screens */}

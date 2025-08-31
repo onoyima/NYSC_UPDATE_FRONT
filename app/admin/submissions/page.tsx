@@ -195,11 +195,11 @@ const SubmissionsManagement: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      // Implement bulk approve logic
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API call
-      toast.success(`${selectedSubmissions.length} submission(s) approved successfully`);
+      // TODO: Implement actual bulk approve API call
+      // await adminService.bulkApproveSubmissions(selectedSubmissions);
+      toast.error('Bulk approve functionality not implemented yet');
       setSelectedSubmissions([]);
-      // Refresh data
+      // TODO: Refresh data after successful approval
     } catch (error) {
       console.error('Error approving submissions:', error);
       toast.error('Failed to approve submissions');
@@ -216,11 +216,11 @@ const SubmissionsManagement: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      // Implement bulk reject logic
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API call
-      toast.success(`${selectedSubmissions.length} submission(s) rejected successfully`);
+      // TODO: Implement actual bulk reject API call
+      // await adminService.bulkRejectSubmissions(selectedSubmissions);
+      toast.error('Bulk reject functionality not implemented yet');
       setSelectedSubmissions([]);
-      // Refresh data
+      // TODO: Refresh data after successful rejection
     } catch (error) {
       console.error('Error rejecting submissions:', error);
       toast.error('Failed to reject submissions');

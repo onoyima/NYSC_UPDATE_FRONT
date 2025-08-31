@@ -147,9 +147,9 @@ class StudentService {
         is_open: response.data.system_status?.is_open || false,
         deadline: response.data.system_status?.deadline || '2024-12-31',
         is_late_fee: response.data.system_status?.is_late_fee || false,
-        current_fee: response.data.system_status?.current_fee || 10000,
-        payment_amount: 10000,
-        late_payment_fee: 15000,
+        current_fee: response.data.system_status?.current_fee || 1000,
+        payment_amount: 1000,
+        late_payment_fee: 10000,
         countdown_title: 'Payment Deadline',
         countdown_message: 'Complete your payment before the deadline'
       };

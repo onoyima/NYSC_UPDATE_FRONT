@@ -30,86 +30,23 @@ const RecentActivity: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'update' | 'payment' | 'submission'>('all');
 
   useEffect(() => {
-    // Mock data - replace with actual API call
-    const mockActivities: Activity[] = [
-      {
-        id: '1',
-        type: 'update',
-        title: 'New Student Update',
-        description: 'Student completed NYSC update form',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-        user: { name: 'John Doe', matric: 'CSC/2019/001' },
-        status: 'success'
-      },
-      {
-        id: '2',
-        type: 'payment',
-        title: 'Payment Received',
-        description: 'NYSC update fee payment completed',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-        user: { name: 'Jane Smith', matric: 'ENG/2019/045' },
-        status: 'success',
-        amount: 50000
-      },
-      {
-        id: '3',
-        type: 'submission',
-        title: 'Form Submission',
-        description: 'Student submitted NYSC application form',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-        user: { name: 'Mike Johnson', matric: 'MED/2019/123' },
-        status: 'pending'
-      },
-      {
-        id: '4',
-        type: 'verification',
-        title: 'Data Verification',
-        description: 'Student data verified and approved',
-        timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-        user: { name: 'Sarah Wilson', matric: 'LAW/2019/078' },
-        status: 'success'
-      },
-      {
-        id: '5',
-        type: 'payment',
-        title: 'Payment Failed',
-        description: 'Payment transaction failed - insufficient funds',
-        timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-        user: { name: 'David Brown', matric: 'BUS/2019/234' },
-        status: 'failed',
-        amount: 50000
-      },
-      {
-        id: '6',
-        type: 'alert',
-        title: 'System Alert',
-        description: 'Multiple failed login attempts detected',
-        timestamp: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
-        status: 'pending'
-      },
-      {
-        id: '7',
-        type: 'update',
-        title: 'Bulk Update',
-        description: '15 students completed update in the last hour',
-        timestamp: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
-        status: 'success'
-      },
-      {
-        id: '8',
-        type: 'submission',
-        title: 'Temp Submission Review',
-        description: 'Temporary submission requires admin review',
-        timestamp: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
-        user: { name: 'Lisa Anderson', matric: 'ART/2019/156' },
-        status: 'pending'
+    const fetchActivities = async () => {
+      try {
+        // TODO: Replace with actual API endpoint
+        // const response = await adminService.getRecentActivities();
+        // setActivities(response.activities || []);
+        
+        // For now, show empty state until API is implemented
+        setActivities([]);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+        setActivities([]);
+        setIsLoading(false);
       }
-    ];
+    };
 
-    setTimeout(() => {
-      setActivities(mockActivities);
-      setIsLoading(false);
-    }, 1000);
+    fetchActivities();
   }, []);
 
   const getActivityIcon = (type: Activity['type']) => {

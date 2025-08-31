@@ -93,69 +93,14 @@ const PaymentDetailsPage: React.FC = () => {
     const fetchPaymentDetails = async () => {
       try {
         setIsLoadingData(true);
-        // Mock data - replace with actual API call
-        const mockPayment: PaymentDetails = {
-          id: parseInt(paymentId),
-          student_id: 1001,
-          student_name: 'John Doe',
-          matric_number: 'CSC/2019/001',
-          email: 'john.doe@university.edu',
-          phone: '+234-801-234-5678',
-          department: 'Computer Science',
-          faculty: 'Science',
-          level: '400',
-          amount: 50000,
-          payment_method: 'paystack',
-          payment_status: 'successful',
-          transaction_reference: 'TXN_001_2023',
-          gateway_reference: 'PSK_001_2023_GATEWAY',
-          payment_date: '2023-01-20T14:45:00Z',
-          created_at: '2023-01-15T10:30:00Z',
-          updated_at: '2023-01-20T14:45:00Z',
-          gateway_response: {
-            status: 'success',
-            gateway_response: 'Approved',
-            paid_at: '2023-01-20T14:45:00Z',
-            channel: 'card',
-            card_type: 'visa',
-            bank: 'Access Bank',
-            last4: '1234'
-          }
-        };
-
-        const mockHistory: PaymentHistory[] = [
-          {
-            id: 1,
-            action: 'Payment Initiated',
-            status: 'pending',
-            amount: 50000,
-            reference: 'TXN_001_2023',
-            timestamp: '2023-01-15T10:30:00Z',
-            notes: 'Student initiated payment via Paystack',
-            performed_by: 'System'
-          },
-          {
-            id: 2,
-            action: 'Payment Verification',
-            status: 'processing',
-            timestamp: '2023-01-20T14:40:00Z',
-            notes: 'Verifying payment with Paystack gateway',
-            performed_by: 'System'
-          },
-          {
-            id: 3,
-            action: 'Payment Confirmed',
-            status: 'successful',
-            amount: 50000,
-            reference: 'PSK_001_2023_GATEWAY',
-            timestamp: '2023-01-20T14:45:00Z',
-            notes: 'Payment successfully processed via Visa card ending in 1234',
-            performed_by: 'Paystack Gateway'
-          }
-        ];
+        // TODO: Replace with actual API call
+        // const response = await paymentService.getPaymentDetails(paymentId);
+        // setPayment(response.payment);
+        // setPaymentHistory(response.history || []);
         
-        setPayment(mockPayment);
-        setPaymentHistory(mockHistory);
+        // For now, redirect back to payments list until API is implemented
+        toast.error('Payment details not available. Please implement API integration.');
+        router.push('/admin/payments');
       } catch (error) {
         console.error('Error fetching payment details:', error);
         toast.error('Failed to load payment details');
@@ -252,10 +197,10 @@ const PaymentDetailsPage: React.FC = () => {
 
     try {
       setIsProcessing(true);
-      // Implement refund logic here
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Mock API call
-      toast.success('Refund initiated successfully');
-      // Refresh payment data
+      // TODO: Implement actual refund API call
+      // await paymentService.processRefund(payment.id);
+      toast.error('Refund functionality not implemented yet');
+      // TODO: Refresh payment data after successful refund
     } catch (error) {
       console.error('Error processing refund:', error);
       toast.error('Failed to process refund');
@@ -272,10 +217,10 @@ const PaymentDetailsPage: React.FC = () => {
 
     try {
       setIsProcessing(true);
-      // Implement retry logic here
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Mock API call
-      toast.success('Payment retry initiated');
-      // Refresh payment data
+      // TODO: Implement actual retry payment API call
+      // await paymentService.retryPayment(payment.id);
+      toast.error('Payment retry functionality not implemented yet');
+      // TODO: Refresh payment data after successful retry
     } catch (error) {
       console.error('Error retrying payment:', error);
       toast.error('Failed to retry payment');

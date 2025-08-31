@@ -77,19 +77,31 @@ const DataExport: React.FC = () => {
   });
   const [matricNumbersText, setMatricNumbersText] = useState('');
 
-  // Mock data for dropdowns
-  const departments = [
-    'Computer Science', 'Engineering', 'Medicine', 'Law', 'Business Administration',
-    'Arts', 'Science', 'Education', 'Agriculture', 'Social Sciences'
-  ];
-  
-  const states = [
-    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
-    'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe',
-    'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara',
-    'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau',
-    'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
-  ];
+  // TODO: Replace with API calls to fetch dynamic data
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+
+  // Fetch departments and states from API
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        // TODO: Implement actual API calls
+        // const deptResponse = await adminService.getDepartments();
+        // const stateResponse = await adminService.getStates();
+        // setDepartments(deptResponse.departments || []);
+        // setStates(stateResponse.states || []);
+        
+        // For now, show empty arrays until API is implemented
+        setDepartments([]);
+        setStates([]);
+      } catch (error) {
+        console.error('Error fetching dropdown data:', error);
+        toast.error('Failed to load dropdown options');
+      }
+    };
+
+    fetchDropdownData();
+  }, []);
 
   useEffect(() => {
     if (!isLoading) {
