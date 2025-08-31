@@ -141,9 +141,9 @@ const LoginPage: React.FC = () => {
           </CardContent>
 
           <CardFooter className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Having trouble? Contact your orientation camp office.
-            </p>
+            {/* <p className="text-sm text-muted-foreground">
+              Having trouble? Con.
+            </p> */}
           </CardFooter>
         </Card>
       </div>

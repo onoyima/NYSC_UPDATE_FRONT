@@ -70,20 +70,20 @@ const PaymentPage: React.FC = () => {
     // Check for payment reference in URL (for verification)
     const urlParams = new URLSearchParams(window.location.search);
     const reference = urlParams.get('reference');
+    const trxref = urlParams.get('trxref');
     const status = urlParams.get('status');
 
-    if (reference) {
-      setPaymentReference(reference);
+    // Priority: reference from callback URL, then trxref from Paystack, then check status
+    const paymentRef = reference || trxref;
+    
+    if (paymentRef && (status === 'success' || reference)) {
+      console.log('Payment callback detected:', { reference, trxref, status });
+      setPaymentReference(paymentRef);
       setIsVerifying(true);
-      verifyPayment(reference);
-    } else if (status === 'success') {
-      // Handle Paystack callback without reference - get reference from trxref
-      const trxref = urlParams.get('trxref');
-      if (trxref) {
-        setPaymentReference(trxref);
-        setIsVerifying(true);
-        verifyPayment(trxref);
-      }
+      verifyPayment(paymentRef);
+    } else if (status === 'cancelled') {
+      toast.error('Payment was cancelled');
+      checkConfirmationStatus();
     } else {
       // Check if student accessed payment page directly without confirmation
       checkConfirmationStatus();
