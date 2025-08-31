@@ -167,7 +167,7 @@ const StudentDashboard: React.FC = () => {
                 </div>
                 
                 {/* Desktop Deadline Counter - Sticky on right edge for large screens */}
-                <div className="hidden lg:block lg:fixed lg:right-4 lg:top-24 lg:w-72 lg:z-40">
+                {/* <div className="hidden lg:block lg:fixed lg:right-4 lg:top-24 lg:w-72 lg:z-40">
                   {systemStatus && (
                     <CountdownTimer
                       deadline={systemStatus.deadline}
@@ -178,7 +178,7 @@ const StudentDashboard: React.FC = () => {
                       className="animate-fade-in-up shadow-lg"
                     />
                   )}
-                </div>
+                </div> */}
               </div>
 
               {/* Analytics Cards */}
