@@ -349,12 +349,12 @@ const StudentsManagementPage: React.FC = () => {
   // Get unique departments and genders for filter options
   const uniqueDepartments = useMemo(() => {
     const departments = students.map(s => s.department).filter(Boolean);
-    return [...new Set(departments)].sort();
+    return Array.from(new Set(departments)).sort();
   }, [students]);
 
   const uniqueGenders = useMemo(() => {
     const genders = students.map(s => s.gender).filter(Boolean);
-    return [...new Set(genders)].sort();
+    return Array.from(new Set(genders)).sort();
   }, [students]);
 
   const paginatedStudents = filteredAndSortedStudents.slice(
@@ -793,7 +793,7 @@ const StudentsManagementPage: React.FC = () => {
                         </Button>
                         <div className="flex items-center gap-1">
                           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            let pageNum;
+                            let pageNum: number;
                             if (totalPages <= 5) {
                               pageNum = i + 1;
                             } else if (currentPage <= 3) {
@@ -884,7 +884,7 @@ const StudentsManagementPage: React.FC = () => {
               Student Details - {selectedStudent?.fname} {selectedStudent?.lname}
             </DialogTitle>
             <DialogDescription>
-              Complete information for this student's information update.
+              Complete information for this student&apos;s information update.
             </DialogDescription>
           </DialogHeader>
           {selectedStudent && (

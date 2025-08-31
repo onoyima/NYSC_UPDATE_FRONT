@@ -125,7 +125,7 @@ const AdminDashboard: React.FC = () => {
                       {admin.title} | {admin.department}
                     </p>
                     <p className="text-gray-500 text-sm mt-1">
-                      Here's what's happening with your Student Update Portal today.
+                      Here&apos;s what&apos;s happening with your Student Update Portal today.
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">

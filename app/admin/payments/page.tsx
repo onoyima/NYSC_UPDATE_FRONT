@@ -7,7 +7,7 @@ import Navbar from '@/components/common/Navbar';
 import Sidebar from '@/components/common/Sidebar';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { 
+import {
   MagnifyingGlassIcon,
   FunnelIcon,
   DocumentArrowDownIcon,
@@ -22,22 +22,7 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 import adminService from '@/services/admin.service';
-
-interface PaymentRecord {
-  id: number;
-  student_id: number;
-  student_name: string;
-  matric_number: string;
-  email: string;
-  department: string;
-  amount: number;
-  payment_method: 'paystack' | 'bank_transfer' | 'cash';
-  payment_status: 'pending' | 'successful' | 'failed' | 'refunded';
-  transaction_reference: string;
-  payment_date: string;
-  created_at: string;
-  updated_at: string;
-}
+import { PaymentRecord } from '@/types/admin.types';
 
 const PaymentManagement: React.FC = () => {
   const { user, userType, hasPermission, isLoading } = useAuth();
@@ -87,20 +72,20 @@ const PaymentManagement: React.FC = () => {
     if (userType === 'admin' && hasPermission('canViewPayments')) {
       fetchPayments();
     }
-  }, [userType, hasPermission]);
+  }, [userType, hasPermission, currentPage, itemsPerPage]);
 
   // Filter and search logic
   const filteredPayments = payments.filter(payment => {
-    const matchesSearch = 
+    const matchesSearch =
       (payment.student_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (payment.matric_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (payment.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (payment.transaction_reference || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = !filterStatus || payment.payment_status === filterStatus;
     const matchesMethod = !filterMethod || payment.payment_method === filterMethod;
     const matchesDepartment = !filterDepartment || payment.department === filterDepartment;
-    
+
     return matchesSearch && matchesStatus && matchesMethod && matchesDepartment;
   });
 
@@ -110,10 +95,10 @@ const PaymentManagement: React.FC = () => {
   const paginatedPayments = filteredPayments.slice(startIndex, startIndex + itemsPerPage);
 
   // Get unique departments for filter
-  const departments = [...new Set(payments.map(p => p.department))];
+  const departments = Array.from(new Set(payments.map(p => p.department)));
 
   // Calculate summary statistics
-  const totalAmount = payments.reduce((sum, payment) => 
+  const totalAmount = payments.reduce((sum, payment) =>
     payment.payment_status === 'successful' ? sum + payment.amount : sum, 0
   );
   const successfulPayments = payments.filter(p => p.payment_status === 'successful').length;
@@ -175,8 +160,8 @@ const PaymentManagement: React.FC = () => {
   };
 
   const handleSelectPayment = (paymentId: number) => {
-    setSelectedPayments(prev => 
-      prev.includes(paymentId) 
+    setSelectedPayments(prev =>
+      prev.includes(paymentId)
         ? prev.filter(id => id !== paymentId)
         : [...prev, paymentId]
     );
@@ -238,11 +223,11 @@ const PaymentManagement: React.FC = () => {
       toast.error('Please select payments to export');
       return;
     }
-    
-    const selectedPaymentData = payments.filter(payment => 
+
+    const selectedPaymentData = payments.filter(payment =>
       selectedPayments.includes(payment.id)
     );
-    
+
     const timestamp = new Date().toISOString().split('T')[0];
     exportToCSV(selectedPaymentData, `selected-payments-${timestamp}.csv`);
     toast.success(`Exported ${selectedPayments.length} payment records`);
@@ -271,7 +256,7 @@ const PaymentManagement: React.FC = () => {
       <div className="min-h-screen bg-background">
         <Sidebar />
         <Navbar userType="admin" />
-        
+
         <main className="ml-0 md:ml-64 pt-20 p-4 md:p-6 min-h-screen">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -363,7 +348,7 @@ const PaymentManagement: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               {/* Status Filter */}
               <div>
                 <select
@@ -378,7 +363,7 @@ const PaymentManagement: React.FC = () => {
                   <option value="refunded">Refunded</option>
                 </select>
               </div>
-              
+
               {/* Method Filter */}
               <div>
                 <select
@@ -392,7 +377,7 @@ const PaymentManagement: React.FC = () => {
                   <option value="cash">Cash</option>
                 </select>
               </div>
-              
+
               {/* Department Filter */}
               <div>
                 <select
@@ -406,7 +391,7 @@ const PaymentManagement: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
               {/* Export Buttons */}
               <div className="flex flex-col gap-2">
                 <button
@@ -425,7 +410,7 @@ const PaymentManagement: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             {/* Bulk Actions */}
             {selectedPayments.length > 0 && (
               <div className="mt-4 flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -490,8 +475,8 @@ const PaymentManagement: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {paginatedPayments.map((payment, index) => (
-                        <tr 
-                          key={payment.id} 
+                        <tr
+                          key={payment.id}
                           className="hover:bg-gray-50 dark:hover:bg-gray-700/50 animate-fade-in"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
@@ -553,7 +538,7 @@ const PaymentManagement: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
-                
+
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -569,7 +554,7 @@ const PaymentManagement: React.FC = () => {
                         >
                           Previous
                         </button>
-                        
+
                         {[...Array(totalPages)].map((_, i) => (
                           <button
                             key={i + 1}
@@ -583,7 +568,7 @@ const PaymentManagement: React.FC = () => {
                             {i + 1}
                           </button>
                         ))}
-                        
+
                         <button
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}

@@ -41,10 +41,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
   const [formData, setFormData] = useState({
     firstName: user?.fname || '',
     lastName: user?.lname || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    address: user?.address || '',
-    bio: (user as any)?.bio || '',
+    email: (user as any)?.email || '',
+        phone: (user as any)?.phone || '',
+        address: (user as any)?.address || '',
+        bio: (user as any)?.bio || '',
     // Student specific
     matricNumber: (user as any)?.matric_no || '',
     institution: (user as any)?.institution || '',
@@ -61,7 +61,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
     } else if (userType === 'admin') {
       fetchAdminProfileData();
     }
-  }, [userType]);
+  }, [userType, fetchStudentProfileData]);
 
   const fetchStudentProfileData = async () => {
     setLoading(true);
@@ -73,11 +73,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
       const data = response.data;
       setFormData({
         firstName: data.student?.first_name || user?.fname || '',
-        lastName: data.student?.last_name || user?.lname || user?.surname || '',
-        email: data.student?.email || user?.email || '',
-        phone: data.contact?.phone || user?.phone || '',
-        address: data.contact?.address || user?.address || '',
-        bio: data.student?.bio || user?.bio || '',
+        lastName: data.student?.last_name || user?.lname || '',
+        email: data.student?.email || (user as any)?.email || '',
+        phone: data.contact?.phone || (user as any)?.phone || '',
+        address: data.contact?.address || (user as any)?.address || '',
+        bio: data.student?.bio || (user as any)?.bio || '',
         matricNumber: data.student?.matric_no || '',
         institution: data.academic?.institution || '',
         course: data.academic?.course_study || '',
@@ -109,8 +109,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
         matricNumber: '',
         institution: '',
         course: '',
-        department: adminUser?.department || '',
-        position: adminUser?.title || '',
+        department: (adminUser as any)?.department || '',
+        position: (adminUser as any)?.title || '',
       });
     } catch (error: any) {
       toast.error('Failed to load admin profile data');
@@ -169,12 +169,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
   const handleCancel = () => {
     // Reset form data
     setFormData({
-      firstName: user?.fname || '',
-      lastName: user?.lname || user?.lname || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      address: user?.address || '',
-      bio: user?.bio || '',
+      firstName: (user as any)?.fname || '',
+      lastName: (user as any)?.lname || '',
+      email: (user as any)?.email || '',
+      phone: (user as any)?.phone || '',
+      address: (user as any)?.address || '',
+      bio: (user as any)?.bio || '',
       matricNumber: (user as any)?.matricNumber || (user as any)?.matric_no || '',
       institution: (user as any)?.institution || '',
       course: (user as any)?.course || '',
@@ -193,9 +193,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={user?.avatar} />
+                  <AvatarImage src={(user as any)?.avatar} />
                   <AvatarFallback className="text-lg">
-                    {user ? getInitials(user.firstName, user.lastName || user.surname) : 'U'}
+                    {user ? getInitials(
+                      `${(user as any).fname || (user as any).firstName || ''} ${(user as any).lname || (user as any).lastName || ''}`.trim()
+                    ) : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <Button

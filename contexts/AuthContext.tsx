@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         startSessionMonitoring(); // Restart monitoring if session is still valid
       }
     }, ACTIVITY_CHECK_INTERVAL);
-  }, [clearTimers, updateLastActivity, checkSessionExpiry]);
+  }, [clearTimers, updateLastActivity, checkSessionExpiry, IDLE_TIMEOUT]);
 
   // Handle user activity
   const handleUserActivity = useCallback(() => {

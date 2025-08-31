@@ -422,7 +422,7 @@ const PaymentDetailsPage: React.FC = () => {
                   
                   {/* Action Buttons */}
                   <div className="mt-6 flex space-x-3">
-                    {payment.payment_status === 'successful' && hasPermission('canRefundPayments') && (
+                    {payment.payment_status === 'successful' && hasPermission('canEditPayments') && (
                       <button
                         onClick={handleRefund}
                         disabled={isProcessing}
@@ -437,7 +437,7 @@ const PaymentDetailsPage: React.FC = () => {
                       </button>
                     )}
                     
-                    {payment.payment_status === 'failed' && hasPermission('canRetryPayments') && (
+                    {payment.payment_status === 'failed' && hasPermission('canEditPayments') && (
                       <button
                         onClick={handleRetryPayment}
                         disabled={isProcessing}

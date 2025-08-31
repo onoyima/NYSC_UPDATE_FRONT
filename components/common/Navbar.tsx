@@ -140,7 +140,7 @@ const Navbar: React.FC<NavbarProps> = ({
                       />
                     )}
                     <AvatarFallback className="text-sm">
-                      {getInitials((user as any).name || `${(user as any).firstName} ${(user as any).surname}`)}
+                      {getInitials((user as any).name || `${(user as any).firstName || (user as any).fname || ''} ${(user as any).lname || (user as any).lastName || ''}`.trim())}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

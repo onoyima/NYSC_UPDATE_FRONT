@@ -83,7 +83,7 @@ const AdminDashboard = () => {
               Admin Dashboard
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Welcome back, {user?.fname || user?.name}! Here's your NYSC management overview.
+              Welcome back, {user?.fname || user?.name}! Here&apos;s your NYSC management overview.
             </p>
             <div className="mt-4 flex items-center space-x-4">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">

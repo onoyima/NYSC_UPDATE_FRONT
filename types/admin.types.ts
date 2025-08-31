@@ -78,20 +78,19 @@ export interface SystemControl {
 }
 
 export interface PaymentRecord {
-  id: string;
-  studentId: string;
-  student: {
-    stateCode: string;
-    surname: string;
-    firstName: string;
-    email: string;
-  };
+  id: number;
+  student_id: number;
+  student_name: string;
+  matric_number: string;
+  email: string;
+  department: string;
   amount: number;
-  reference: string;
-  status: 'pending' | 'completed' | 'failed';
-  gateway: 'paystack';
-  paidAt?: string;
-  createdAt: string;
+  payment_method: 'paystack' | 'bank_transfer' | 'cash';
+  payment_status: 'pending' | 'successful' | 'failed' | 'refunded';
+  transaction_reference: string;
+  payment_date: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ExportOptions {

@@ -71,7 +71,7 @@ const PaymentPage: React.FC = () => {
       // Check if student accessed payment page directly without confirmation
       checkConfirmationStatus();
     }
-  }, []);
+  }, [checkConfirmationStatus]);
 
   const checkConfirmationStatus = async () => {
     try {

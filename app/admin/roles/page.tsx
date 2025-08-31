@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { AdminRole, RolePermissions, roleDisplayNames } from '@/types/auth.types';
 import { getRolePermissions } from '@/utils/rolePermissions';
+import { adminService } from '@/services/admin.service';
 
 interface AdminUser {
   id: number;
@@ -87,7 +88,7 @@ const RoleManagement: React.FC = () => {
     const fetchAdminUsers = async () => {
       try {
         setIsLoadingData(true);
-        const response = await adminService.getAdminUsers(searchTerm, statusFilter);
+        const response = await adminService.getAdminUsers(searchTerm, filterStatus);
         
         if (response.success) {
           setAdminUsers(response.users);
@@ -105,7 +106,7 @@ const RoleManagement: React.FC = () => {
     if (userType === 'admin' && isSuperAdmin) {
       fetchAdminUsers();
     }
-  }, [userType, isSuperAdmin]);
+  }, [userType, isSuperAdmin, filterStatus, searchTerm]);
 
   // Filter users
   const filteredUsers = adminUsers.filter(adminUser => {
@@ -124,7 +125,8 @@ const RoleManagement: React.FC = () => {
     const configs = {
       admin: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
       sub_admin: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-      manager: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+      manager: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+      super_admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
     };
 
     return (
@@ -222,7 +224,6 @@ const RoleManagement: React.FC = () => {
         }
 
         const response = await adminService.createAdminUser({
-          staff_id: formData.staff_id,
           fname,
           lname,
           email: formData.email,
@@ -321,7 +322,6 @@ const RoleManagement: React.FC = () => {
       const lname = nameParts.slice(1).join(' ') || '';
       
       const response = await adminService.updateAdminUser(adminUser.id, {
-        staff_id: adminUser.staff_id,
         fname,
         lname,
         email: adminUser.email,

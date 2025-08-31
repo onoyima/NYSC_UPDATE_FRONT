@@ -303,7 +303,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
             <span>Progress</span>
             <span>{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="mt-2" />
         </div>
         
         <div className="space-y-2">

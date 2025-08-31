@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
+// const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://academy.veritas.edu.ng/';
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/';
 
 const axiosInstance: AxiosInstance = axios.create({
@@ -29,7 +30,7 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const originalRequest = error.config;
-    
+
     // Only redirect to /login for 401 errors on protected endpoints (not login or verify endpoints)
     if (
       error.response?.status === 401 &&

@@ -144,23 +144,12 @@ const DataExport: React.FC = () => {
       };
       
       // Remove empty filters
-      Object.keys(exportFilters).forEach((key) => {
-        const k = key as keyof ExportFilter;
-        const value = exportFilters[k] as unknown;
-        const isEmpty =
-          value === undefined ||
-          value === null ||
-          (typeof value === 'string' && value.trim() === '') ||
-          (Array.isArray(value) && value.length === 0) ||
-          (k === 'dateRange' &&
-            value &&
-            typeof value === 'object' &&
-            'start' in (value as any) &&
-            'end' in (value as any) &&
-            ((value as any).start === '' && (value as any).end === ''));
-      
-        if (isEmpty) {
-          delete exportFilters[k];
+      Object.keys(exportFilters).forEach(key => {
+        const value = exportFilters[key as keyof ExportFilter];
+        if (!value || (typeof value === 'string' && value === '') || 
+            (Array.isArray(value) && value.length === 0) ||
+            (typeof value === 'object' && value.start === '' && value.end === '')) {
+          delete exportFilters[key as keyof ExportFilter];
         }
       });
       
@@ -658,7 +647,7 @@ const DataExport: React.FC = () => {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            {job.status === 'completed' && (
+                            {job.status === 'completed' && job.downloadUrl && (
                               <button
                                 onClick={() => handleDownload(job)}
                                 className="inline-flex items-center px-3 py-1 bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-800 dark:text-green-400 rounded-lg text-sm transition-colors"

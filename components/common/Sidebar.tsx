@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -135,7 +136,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         case '/admin/exports':
           return hasPermission(userRole, 'canDownloadData');
         case '/admin/admin-users':
-          return hasPermission(userRole, 'canManageAdminUsers');
+          return hasPermission(userRole, 'canAssignRoles');
         case '/admin/roles':
           return hasPermission(userRole, 'canAssignRoles');
         case '/admin/settings':
@@ -209,9 +210,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       <div className="flex h-16 items-center justify-between px-4 border-b">
         {!isCollapsed && (
           <Link href={userType === 'admin' ? '/admin' : '/student'} className="flex items-center space-x-2">
-            <img 
+            <Image 
               src="/logo.png" 
               alt="Logo" 
+              width={32}
+              height={32}
               className="h-8 w-8 rounded object-contain"
             />
             <span className="text-lg font-semibold">Portal</span>
@@ -219,9 +222,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         )}
         {isCollapsed && (
           <Link href={userType === 'admin' ? '/admin' : '/student'} className="flex items-center justify-center">
-            <img 
+            <Image 
               src="/logo.png" 
               alt="Logo" 
+              width={32}
+              height={32}
               className="h-8 w-8 rounded object-contain"
             />
           </Link>

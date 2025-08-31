@@ -149,7 +149,7 @@ const PaymentHistoryPage: React.FC = () => {
                       <Receipt className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No Payment History</h3>
                       <p className="text-muted-foreground mb-4">
-                        You haven't made any payments yet.
+                        You haven&apos;t made any payments yet.
                       </p>
                     </div>
                   </CardContent>

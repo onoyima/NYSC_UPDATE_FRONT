@@ -7,7 +7,7 @@ import Navbar from '@/components/common/Navbar';
 import Sidebar from '@/components/common/Sidebar';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { 
+import {
   MagnifyingGlassIcon,
   FunnelIcon,
   DocumentArrowDownIcon,
@@ -96,22 +96,22 @@ const SubmissionsManagement: React.FC = () => {
       }
     };
 
-    if (userType === 'admin' && hasPermission('canViewSubmissions')) {
+    if (userType === 'admin' && hasPermission('canViewTempSubmissions')) {
       fetchSubmissions();
     }
-  }, [userType, hasPermission]);
+  }, [userType, hasPermission, currentPage, itemsPerPage]);
 
   // Filter and search logic
   const filteredSubmissions = submissions.filter(submission => {
-    const matchesSearch = 
+    const matchesSearch =
       submission.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       submission.matric_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       submission.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = !filterStatus || submission.submission_status === filterStatus;
     const matchesType = !filterType || submission.submission_type === filterType;
     const matchesDepartment = !filterDepartment || submission.department === filterDepartment;
-    
+
     return matchesSearch && matchesStatus && matchesType && matchesDepartment;
   });
 
@@ -121,7 +121,7 @@ const SubmissionsManagement: React.FC = () => {
   const paginatedSubmissions = filteredSubmissions.slice(startIndex, startIndex + itemsPerPage);
 
   // Get unique departments for filter
-  const departments = [...new Set(submissions.map(s => s.department))];
+  const departments = Array.from(new Set(submissions.map(s => s.department)));
 
   // Calculate summary statistics
   const pendingSubmissions = submissions.filter(s => s.submission_status === 'pending').length;
@@ -170,8 +170,8 @@ const SubmissionsManagement: React.FC = () => {
   };
 
   const handleSelectSubmission = (submissionId: number) => {
-    setSelectedSubmissions(prev => 
-      prev.includes(submissionId) 
+    setSelectedSubmissions(prev =>
+      prev.includes(submissionId)
         ? prev.filter(id => id !== submissionId)
         : [...prev, submissionId]
     );
@@ -190,7 +190,7 @@ const SubmissionsManagement: React.FC = () => {
       toast.error('Please select submissions to approve');
       return;
     }
-    
+
     const confirmed = window.confirm(`Are you sure you want to approve ${selectedSubmissions.length} submission(s)?`);
     if (!confirmed) return;
 
@@ -211,7 +211,7 @@ const SubmissionsManagement: React.FC = () => {
       toast.error('Please select submissions to reject');
       return;
     }
-    
+
     const confirmed = window.confirm(`Are you sure you want to reject ${selectedSubmissions.length} submission(s)?`);
     if (!confirmed) return;
 
@@ -253,10 +253,10 @@ const SubmissionsManagement: React.FC = () => {
       <div className="min-h-screen bg-background">
         {/* Fixed Sidebar */}
         <Sidebar />
-        
+
         {/* Navbar */}
         <Navbar userType="admin" />
-        
+
         <main className="ml-0 md:ml-64 pt-16 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -348,7 +348,7 @@ const SubmissionsManagement: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               {/* Status Filter */}
               <div>
                 <select
@@ -363,7 +363,7 @@ const SubmissionsManagement: React.FC = () => {
                   <option value="under_review">Under Review</option>
                 </select>
               </div>
-              
+
               {/* Type Filter */}
               <div>
                 <select
@@ -377,7 +377,7 @@ const SubmissionsManagement: React.FC = () => {
                   <option value="correction">Correction</option>
                 </select>
               </div>
-              
+
               {/* Department Filter */}
               <div>
                 <select
@@ -391,7 +391,7 @@ const SubmissionsManagement: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
               {/* Export Button */}
               <div>
                 <button
@@ -403,7 +403,7 @@ const SubmissionsManagement: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             {/* Bulk Actions */}
             {selectedSubmissions.length > 0 && (
               <div className="mt-4 flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -411,7 +411,7 @@ const SubmissionsManagement: React.FC = () => {
                   {selectedSubmissions.length} submission(s) selected
                 </span>
                 <div className="flex space-x-2">
-                  {hasPermission('canApproveSubmissions') && (
+                  {hasPermission('canEditTempSubmissions') && (
                     <button
                       onClick={handleBulkApprove}
                       className="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors"
@@ -420,7 +420,7 @@ const SubmissionsManagement: React.FC = () => {
                       Approve
                     </button>
                   )}
-                  {hasPermission('canRejectSubmissions') && (
+                  {hasPermission('canEditTempSubmissions') && (
                     <button
                       onClick={handleBulkReject}
                       className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
@@ -483,8 +483,8 @@ const SubmissionsManagement: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {paginatedSubmissions.map((submission, index) => (
-                        <tr 
-                          key={submission.id} 
+                        <tr
+                          key={submission.id}
                           className="hover:bg-gray-50 dark:hover:bg-gray-700/50 animate-fade-in"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
@@ -539,7 +539,7 @@ const SubmissionsManagement: React.FC = () => {
                               >
                                 <EyeIcon className="h-4 w-4" />
                               </Link>
-                              {hasPermission('canEditSubmissions') && (
+                              {hasPermission('canEditTempSubmissions') && (
                                 <Link
                                   href={`/admin/submissions/${submission.id}/edit`}
                                   className="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
@@ -555,7 +555,7 @@ const SubmissionsManagement: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
-                
+
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -571,7 +571,7 @@ const SubmissionsManagement: React.FC = () => {
                         >
                           Previous
                         </button>
-                        
+
                         {[...Array(totalPages)].map((_, i) => (
                           <button
                             key={i + 1}
@@ -585,7 +585,7 @@ const SubmissionsManagement: React.FC = () => {
                             {i + 1}
                           </button>
                         ))}
-                        
+
                         <button
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}

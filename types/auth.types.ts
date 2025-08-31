@@ -93,7 +93,7 @@ export interface Student {
   hobbies?: string;
   username?: string;
   matric_no: string;
-  department?: string;
+  department?: string | { name: string };
   level?: string;
   session?: string;
   status?: string;

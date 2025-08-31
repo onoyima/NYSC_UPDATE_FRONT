@@ -14,6 +14,8 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
+import { RolePermissions } from '@/types/admin.types';
+
 interface QuickAction {
   id: string;
   title: string;
@@ -21,13 +23,13 @@ interface QuickAction {
   icon: React.ComponentType<{ className?: string }>;
   href: string;
   color: string;
-  permission?: string;
+  permission?: keyof RolePermissions;
   adminOnly?: boolean;
   superAdminOnly?: boolean;
 }
 
 const QuickActions: React.FC = () => {
-  const { hasPermission, userType, user } = useAuth();
+  const { hasPermission, userType, user, userRole } = useAuth();
 
   const isSuperAdmin = userType === 'admin' && user?.id === 596;
 
@@ -39,7 +41,7 @@ const QuickActions: React.FC = () => {
       icon: UserPlusIcon,
       href: '/admin/students/add',
       color: 'bg-blue-500 hover:bg-blue-600',
-      permission: 'canAddStudents'
+      permission: 'canAddStudentNysc'
     },
     {
       id: 'export-data',
@@ -48,7 +50,7 @@ const QuickActions: React.FC = () => {
       icon: DocumentArrowDownIcon,
       href: '/admin/export',
       color: 'bg-green-500 hover:bg-green-600',
-      permission: 'canExportData'
+      permission: 'canDownloadData'
     },
     {
       id: 'payment-overview',
@@ -66,7 +68,7 @@ const QuickActions: React.FC = () => {
       icon: DocumentCheckIcon,
       href: '/admin/submissions/pending',
       color: 'bg-yellow-500 hover:bg-yellow-600',
-      permission: 'canManageSubmissions'
+      permission: 'canViewTempSubmissions'
     },
     {
       id: 'student-management',
@@ -75,7 +77,7 @@ const QuickActions: React.FC = () => {
       icon: UsersIcon,
       href: '/admin/students',
       color: 'bg-indigo-500 hover:bg-indigo-600',
-      permission: 'canViewStudents'
+      permission: 'canViewStudentNysc'
     },
     {
       id: 'analytics',
@@ -187,7 +189,7 @@ const QuickActions: React.FC = () => {
           <span>
             Showing actions available for your role: 
             <span className="font-medium text-gray-900 dark:text-white ml-1">
-              {isSuperAdmin ? 'Super Admin' : userType === 'admin' ? 'Admin' : userType === 'sub_admin' ? 'Sub Admin' : 'Manager'}
+              {isSuperAdmin ? 'Super Admin' : userRole === 'admin' ? 'Admin' : userRole === 'sub_admin' ? 'Sub Admin' : userRole === 'manager' ? 'Manager' : 'User'}
             </span>
           </span>
         </div>

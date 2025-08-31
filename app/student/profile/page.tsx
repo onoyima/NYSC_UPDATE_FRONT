@@ -8,7 +8,7 @@ import ProfileSection from '@/components/common/ProfileSection';
 
 const StudentProfilePage: React.FC = () => {
   return (
-    <ProtectedRoute allowedRoles={['student']}>
+    <ProtectedRoute userType="student">
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex">
