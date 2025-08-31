@@ -118,7 +118,7 @@ const DataExport: React.FC = () => {
       }
     };
     
-    if (userType === 'admin' && hasPermission('canExportData')) {
+    if (userType === 'admin' && hasPermission('canDownloadData')) {
       fetchExportJobs();
     }
   }, [userType, hasPermission]);
@@ -267,7 +267,7 @@ const DataExport: React.FC = () => {
     );
   }
 
-  if (userType !== 'admin' || !hasPermission('canExportData')) {
+  if (userType !== 'admin' || !hasPermission('canDownloadData')) {
     return null;
   }
 
