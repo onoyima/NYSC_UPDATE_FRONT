@@ -42,26 +42,33 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
     firstName: user?.fname || '',
     lastName: user?.lname || '',
     email: (user as any)?.email || '',
-        phone: (user as any)?.phone || '',
-        address: (user as any)?.address || '',
-        bio: (user as any)?.bio || '',
+    phone: (user as any)?.phone || '',
+    address: (user as any)?.address || '',
+    bio: (user as any)?.bio || '',
     // Student specific
     matricNumber: (user as any)?.matric_no || '',
     institution: (user as any)?.institution || '',
     course: (user as any)?.course || '',
+    dateOfBirth: '',
+    gender: '',
+    stateOfOrigin: '',
+    localGovernment: '',
+    nextOfKinName: '',
+    nextOfKinPhone: '',
+    nextOfKinAddress: '',
+    graduationYear: '',
+    degreeClass: '',
+    nysc_call_up_number: '',
+    batch: '',
+    stream: '',
+    state_deployed: '',
+    local_government_deployed: '',
+    place_of_primary_assignment: '',
+    corps_members_number: '',
     // Admin specific
     department: (user as any)?.department || '',
     position: (user as any)?.position || '',
   });
-
-  // Fetch comprehensive profile data
-  useEffect(() => {
-    if (userType === 'student') {
-      fetchStudentProfileData();
-    } else if (userType === 'admin') {
-      fetchAdminProfileData();
-    }
-  }, [userType, fetchStudentProfileData]);
 
   const fetchStudentProfileData = async () => {
     setLoading(true);
@@ -74,22 +81,48 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
       setFormData({
         firstName: data.student?.first_name || user?.fname || '',
         lastName: data.student?.last_name || user?.lname || '',
-        email: data.student?.email || (user as any)?.email || '',
-        phone: data.contact?.phone || (user as any)?.phone || '',
-        address: data.contact?.address || (user as any)?.address || '',
-        bio: data.student?.bio || (user as any)?.bio || '',
+        email: data.student?.email || user?.email || '',
+        phone: data.student?.phone || '',
+        address: data.student?.address || '',
+        bio: data.student?.bio || '',
         matricNumber: data.student?.matric_no || '',
-        institution: data.academic?.institution || '',
-        course: data.academic?.course_study || '',
-        department: typeof data.academic?.department === 'object' ? data.academic?.department?.name || '' : data.academic?.department || '',
-        position: '',
+        institution: data.student?.institution || '',
+        course: data.student?.course || '',
+        dateOfBirth: data.student?.date_of_birth || '',
+        gender: data.student?.gender || '',
+        stateOfOrigin: data.student?.state_of_origin || '',
+        localGovernment: data.student?.local_government || '',
+        nextOfKinName: data.student?.next_of_kin_name || '',
+        nextOfKinPhone: data.student?.next_of_kin_phone || '',
+        nextOfKinAddress: data.student?.next_of_kin_address || '',
+        graduationYear: data.student?.graduation_year || '',
+        degreeClass: data.student?.degree_class || '',
+        nysc_call_up_number: data.student?.nysc_call_up_number || '',
+        batch: data.student?.batch || '',
+        stream: data.student?.stream || '',
+        state_deployed: data.student?.state_deployed || '',
+        local_government_deployed: data.student?.local_government_deployed || '',
+        place_of_primary_assignment: data.student?.place_of_primary_assignment || '',
+        corps_members_number: data.student?.corps_members_number || '',
+        department: '',
+        position: ''
       });
-    } catch (error: any) {
-      toast.error('Failed to load student profile data');
+    } catch (error) {
+      console.error('Error fetching student profile:', error);
+      toast.error('Failed to load profile data');
     } finally {
       setLoading(false);
     }
   };
+
+  // Fetch comprehensive profile data
+  useEffect(() => {
+    if (userType === 'student') {
+      fetchStudentProfileData();
+    } else if (userType === 'admin') {
+      fetchAdminProfileData();
+    }
+  }, [userType]);
 
   const fetchAdminProfileData = async () => {
     setLoading(true);
@@ -109,6 +142,22 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
         matricNumber: '',
         institution: '',
         course: '',
+        dateOfBirth: '',
+        gender: '',
+        stateOfOrigin: '',
+        localGovernment: '',
+        nextOfKinName: '',
+        nextOfKinPhone: '',
+        nextOfKinAddress: '',
+        graduationYear: '',
+        degreeClass: '',
+        nysc_call_up_number: '',
+        batch: '',
+        stream: '',
+        state_deployed: '',
+        local_government_deployed: '',
+        place_of_primary_assignment: '',
+        corps_members_number: '',
         department: (adminUser as any)?.department || '',
         position: (adminUser as any)?.title || '',
       });
@@ -178,6 +227,22 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userType }) => {
       matricNumber: (user as any)?.matricNumber || (user as any)?.matric_no || '',
       institution: (user as any)?.institution || '',
       course: (user as any)?.course || '',
+      dateOfBirth: '',
+      gender: '',
+      stateOfOrigin: '',
+      localGovernment: '',
+      nextOfKinName: '',
+      nextOfKinPhone: '',
+      nextOfKinAddress: '',
+      graduationYear: '',
+      degreeClass: '',
+      nysc_call_up_number: '',
+      batch: '',
+      stream: '',
+      state_deployed: '',
+      local_government_deployed: '',
+      place_of_primary_assignment: '',
+      corps_members_number: '',
       department: (user as any)?.department || '',
       position: (user as any)?.position || '',
     });
