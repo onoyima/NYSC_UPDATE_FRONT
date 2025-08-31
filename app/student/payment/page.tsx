@@ -47,6 +47,23 @@ const PaymentPage: React.FC = () => {
   const [showSuccessPage, setShowSuccessPage] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const checkConfirmationStatus = async () => {
+    try {
+      // Check if there's a pending temporary submission
+      const response = await studentService.getDetails();
+      const hasConfirmedData = localStorage.getItem('nysc_form_data') || 
+                              localStorage.getItem('session_id');
+      
+      if (!hasConfirmedData && !response.data?.is_submitted) {
+        toast.error('Please confirm your data first before making payment.');
+        router.push('/student/confirm');
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking confirmation status:', error);
+    }
+  };
+
   useEffect(() => {
     fetchStudentDetails();
 
@@ -71,26 +88,10 @@ const PaymentPage: React.FC = () => {
       // Check if student accessed payment page directly without confirmation
       checkConfirmationStatus();
     }
-  }, [checkConfirmationStatus]);
-
-  const checkConfirmationStatus = async () => {
-    try {
-      // Check if there's a pending temporary submission
-      const response = await studentService.getDetails();
-      const hasConfirmedData = localStorage.getItem('nysc_form_data') || 
-                              localStorage.getItem('session_id');
-      
-      if (!hasConfirmedData && !response.data?.is_submitted) {
-        toast.error('Please confirm your data first before making payment.');
-        router.push('/student/confirm');
-        return;
-      }
-    } catch (error) {
-      console.error('Error checking confirmation status:', error);
-    }
-  };
+  }, []);
 
   const fetchStudentDetails = async () => {
+
     try {
       const [detailsResponse, systemStatusData] = await Promise.all([
         studentService.getDetails(),
