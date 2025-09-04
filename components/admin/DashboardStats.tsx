@@ -110,7 +110,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
       icon: CreditCardIcon,
       color: 'purple',
       change: { value: 15, type: 'increase' as const },
-      subtitle: `₦${(data.completedPayments * 50000).toLocaleString()} total revenue`
+      subtitle: `₦${data.paymentAnalytics.totalRevenue.toLocaleString()} total revenue`
     },
     {
       title: 'Pending Payments',
@@ -181,7 +181,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              ₦{((data.completedPayments * 50000) / 1000000).toFixed(1)}M
+              ₦{(data.paymentAnalytics.totalRevenue / 1000000).toFixed(1)}M
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Total Revenue

@@ -187,7 +187,7 @@ const PaymentPage: React.FC = () => {
                       <CardTitle>Data Confirmation Required</CardTitle>
                     </div>
                     <CardDescription>
-                      You must confirm your data before making payment.
+                      You must confirm your  making payment.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -399,7 +399,7 @@ const PaymentPage: React.FC = () => {
                   <div className="border-2 border-primary/20 bg-primary/5 p-6 rounded-lg text-center">
                     <h3 className="text-lg font-semibold mb-2">Information Update Fee</h3>
                     <div className="text-3xl font-bold text-primary mb-2">
-                      {formatCurrency(systemStatus?.current_fee || studentDetails?.payment_amount || 1000)}
+                      {formatCurrency(systemStatus?.current_fee || studentDetails?.payment_amount || 0)}
                     </div>
                     <Badge variant={systemStatus?.is_late_fee ? "destructive" : "secondary"}>
                       {systemStatus?.is_late_fee ? 'Late Fee' : 'Standard Fee'}
@@ -453,7 +453,7 @@ const PaymentPage: React.FC = () => {
                     ) : (
                       <>
                         <CreditCard className="mr-2 h-5 w-5" />
-                        Pay {formatCurrency(studentDetails?.payment_amount || 1000)} Now
+                        Pay {formatCurrency(systemStatus?.current_fee || studentDetails?.payment_amount || 0)} Now
                         <ExternalLink className="ml-2 h-4 w-4" />
                       </>
                     )}

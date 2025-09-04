@@ -53,6 +53,11 @@ const studentNavItems: NavItem[] = [
     icon: User,
   },
   {
+    title: 'Data Management',
+    href: '/admin/data',
+    icon: FileText,
+  },
+  {
     title: 'Payment',
     href: '/student/payment',
     icon: CreditCard,

@@ -53,6 +53,7 @@
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.23.12",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
@@ -74,5 +75,8 @@
     "vaul": "^0.9.9",
     "yup": "^1.7.0",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.7"
   }
 }

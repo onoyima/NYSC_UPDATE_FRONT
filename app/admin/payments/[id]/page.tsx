@@ -27,6 +27,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import adminService from '@/services/admin.service';
 
 interface PaymentDetails {
   id: number;
@@ -93,17 +94,14 @@ const PaymentDetailsPage: React.FC = () => {
     const fetchPaymentDetails = async () => {
       try {
         setIsLoadingData(true);
-        // TODO: Replace with actual API call
-        // const response = await paymentService.getPaymentDetails(paymentId);
-        // setPayment(response.payment);
-        // setPaymentHistory(response.history || []);
-        
-        // For now, redirect back to payments list until API is implemented
-        toast.error('Payment details not available. Please implement API integration.');
-        router.push('/admin/payments');
+        // Fetch actual payment details from API
+        const response = await adminService.getPaymentDetails(paymentId);
+        setPayment(response.payment);
+        setPaymentHistory(response.history || []);
       } catch (error) {
         console.error('Error fetching payment details:', error);
         toast.error('Failed to load payment details');
+        router.push('/admin/payments');
       } finally {
         setIsLoadingData(false);
       }
@@ -112,7 +110,7 @@ const PaymentDetailsPage: React.FC = () => {
     if (userType === 'admin' && hasPermission('canViewPayments') && paymentId) {
       fetchPaymentDetails();
     }
-  }, [userType, hasPermission, paymentId]);
+  }, [userType, hasPermission, paymentId, router]);
 
   const getStatusIcon = (status: PaymentDetails['payment_status']) => {
     switch (status) {
@@ -197,10 +195,12 @@ const PaymentDetailsPage: React.FC = () => {
 
     try {
       setIsProcessing(true);
-      // TODO: Implement actual refund API call
-      // await paymentService.processRefund(payment.id);
-      toast.error('Refund functionality not implemented yet');
-      // TODO: Refresh payment data after successful refund
+      await adminService.processRefund(payment.id);
+      toast.success('Payment refunded successfully');
+      // Refresh payment data after successful refund
+      const response = await adminService.getPaymentDetails(paymentId);
+      setPayment(response.payment);
+      setPaymentHistory(response.history || []);
     } catch (error) {
       console.error('Error processing refund:', error);
       toast.error('Failed to process refund');
@@ -217,10 +217,12 @@ const PaymentDetailsPage: React.FC = () => {
 
     try {
       setIsProcessing(true);
-      // TODO: Implement actual retry payment API call
-      // await paymentService.retryPayment(payment.id);
-      toast.error('Payment retry functionality not implemented yet');
-      // TODO: Refresh payment data after successful retry
+      await adminService.retryPayment(payment.id);
+      toast.success('Payment retry initiated successfully');
+      // Refresh payment data after successful retry
+      const response = await adminService.getPaymentDetails(paymentId);
+      setPayment(response.payment);
+      setPaymentHistory(response.history || []);
     } catch (error) {
       console.error('Error retrying payment:', error);
       toast.error('Failed to retry payment');

@@ -145,11 +145,11 @@ class StudentService {
       const response = await axiosInstance.get('/api/nysc/admin/dashboard');
       return {
         is_open: response.data.system_status?.is_open || false,
-        deadline: response.data.system_status?.deadline || '2024-12-31',
+        deadline: response.data.system_status?.deadline || '2026-12-31',
         is_late_fee: response.data.system_status?.is_late_fee || false,
-        current_fee: response.data.system_status?.current_fee || 1000,
-        payment_amount: 1000,
-        late_payment_fee: 10000,
+        current_fee: response.data.system_status?.current_fee || 0,
+      payment_amount: response.data.system_status?.payment_amount || 0,
+      late_payment_fee: response.data.system_status?.late_payment_fee || 0,
         countdown_title: 'Payment Deadline',
         countdown_message: 'Complete your payment before the deadline'
       };

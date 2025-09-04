@@ -49,6 +49,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
       permission: 'canViewStudentNysc'
     },
     {
+      name: 'Data Management',
+      href: '/admin/data',
+      icon: DocumentTextIcon,
+      permission: 'canViewStudentNysc'
+    },
+    {
       name: 'Payment Management',
       href: '/admin/payments',
       icon: CreditCardIcon,

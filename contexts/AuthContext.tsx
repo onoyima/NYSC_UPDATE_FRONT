@@ -62,8 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const IDLE_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-  const ACTIVITY_CHECK_INTERVAL = 5 * 60 * 1000; // Check every 5 minutes
+  // 72 hours in milliseconds
+const IDLE_TIMEOUT = 72 * 60 * 60 * 1000; // 259,200,000 ms
+const ACTIVITY_CHECK_INTERVAL = 5 * 60 * 1000; // You can adjust this if needed
 
   // Clear all timers
   const clearTimers = useCallback(() => {
