@@ -87,7 +87,7 @@ export default function AdminDataPage() {
       const filename = `nysc_data_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.${fmt}`;
       saveAs(resp.data, filename);
       console.log('File saved successfully:', filename);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Download error:', e);
       console.error('Error response:', e.response);
       alert(`Download failed: ${e.response?.data?.message || e.message}`);
