@@ -76,11 +76,21 @@ export default function AdminDataPage() {
 
   const handleDownload = async (fmt: 'csv' | 'xlsx' | 'pdf') => {
     try {
+      console.log('Starting download for format:', fmt);
+      console.log('User authenticated:', isAuthenticated);
+      console.log('User type:', userType);
+      console.log('Is admin:', isAdmin);
+      
       const resp = await axios.get(`/api/nysc/export/${fmt}`, { responseType: 'blob' });
+      console.log('Download response:', resp);
+      
       const filename = `nysc_data_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.${fmt}`;
       saveAs(resp.data, filename);
+      console.log('File saved successfully:', filename);
     } catch (e) {
       console.error('Download error:', e);
+      console.error('Error response:', e.response);
+      alert(`Download failed: ${e.response?.data?.message || e.message}`);
     }
   };
 
@@ -223,98 +233,101 @@ export default function AdminDataPage() {
               )}
             </div>
 
-            {/* Mobile Card View - Hidden on desktop */}
-            <div className="block lg:hidden space-y-4">
+            {/* Mobile Table View - Hidden on desktop */}
+            <div className="block lg:hidden">
               {sorted.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                  <MagnifyingGlassIcon className="w-12 h-12 text-gray-300 mb-4 mx-auto" />
-                  <p className="text-lg font-medium text-gray-900">No students found</p>
+                <div className="bg-white rounded-lg shadow-md p-6 text-center">
+                  <MagnifyingGlassIcon className="w-10 h-10 text-gray-300 mb-3 mx-auto" />
+                  <p className="text-base font-medium text-gray-900">No students found</p>
                   <p className="text-sm text-gray-500">Try adjusting your search criteria</p>
                 </div>
               ) : (
-                sorted.map((s, index) => (
-                  <div key={s.id} className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{s.fname} {s.lname}</h3>
-                        <p className="text-sm text-gray-600">{s.matric_no}</p>
-                      </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        s.is_status 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {s.is_status ? 'Revalidation' : 'Fresh'}
-                      </span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="font-medium text-gray-500">Phone:</span>
-                        <p className="text-gray-900">{s.phone}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-500">State:</span>
-                        <p className="text-gray-900">{s.state}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-500">CGPA:</span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {s.cgpa} 
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-500">Gender:</span>
-                        <p className="text-gray-900">{s.gender}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-500">DOB:</span>
-                        <p className="text-gray-900">{formatDate(s.dob)}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-500">Graduation:</span>
-                        <p className="text-gray-900">{s.graduation_year}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-500">Study Mode:</span>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          s.study_mode === 'Full-Time' 
-                            ? 'bg-green-100 text-green-800'
-                            : s.study_mode === 'Part-Time'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-purple-100 text-purple-800'
-                        }`}>
-                          {s.study_mode}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-500">Military:</span>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          s.is_military 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {s.is_military ? 'Yes' : 'No'}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {s.course_study && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <span className="font-medium text-gray-500">Course:</span>
-                        <p className="text-sm text-gray-900 mt-1">{s.course_study}</p>
-                      </div>
-                    )}
+                <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                       <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matric No</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Name</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Middle Name</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Surname</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CGPA</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DOB</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Graduation Year</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marital Status</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JAMB No</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Military</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Study Mode</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {sorted.map((s, index) => (
+                            <tr key={s.id} className="hover:bg-gray-50">
+                              <td className="px-1 py-2 text-xs font-medium text-gray-900">{s.matric_no}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.fname}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.mname || '-'}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.lname}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.phone}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.state}</td>
+                              <td className="px-1 py-2 text-xs">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  {isAdmin ? s.cgpa : '****'}
+                                </span>
+                              </td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{isAdmin ? formatDate(s.dob) : '**/**/****'}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.graduation_year}</td>
+                              <td className="px-1 py-2 text-xs">
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                  s.is_status 
+                                    ? 'bg-yellow-100 text-yellow-800' 
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {s.is_status ? 'Revalidation' : 'Fresh'}
+                                </span>
+                              </td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.gender}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.marital_status}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{s.jamb_no}</td>
+                              <td className="px-1 py-2 text-xs">
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                  s.is_military 
+                                    ? 'bg-red-100 text-red-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {s.is_military ? 'Yes' : 'No'}
+                                </span>
+                              </td>
+                              <td className="px-1 py-2 text-xs text-gray-700 max-w-xs truncate" title={s.course_study}>{s.course_study}</td>
+                              <td className="px-1 py-2 text-xs">
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                  s.study_mode === 'Full-Time' 
+                                    ? 'bg-green-100 text-green-800'
+                                    : s.study_mode === 'Part-Time'
+                                    ? 'bg-orange-100 text-orange-800'
+                                    : 'bg-purple-100 text-purple-800'
+                                }`}>
+                                  {s.study_mode}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))
+                </div>
               )}
             </div>
 
             {/* Desktop Table View - Hidden on mobile */}
             <div className="hidden lg:block bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0 z-10">
                     <tr>
                       {[
                         { label: 'Matric No', key: 'matric_no' },
@@ -390,11 +403,11 @@ export default function AdminDataPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              {s.cgpa}
+                              {isAdmin ? s.cgpa : '****'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {formatDate(s.dob)}
+                            {isAdmin ? formatDate(s.dob) : '**/**/****'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {s.graduation_year}

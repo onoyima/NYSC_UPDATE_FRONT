@@ -55,20 +55,18 @@ class AdminSettingsService {
       const response = await axiosInstance.get('/api/nysc/admin/dashboard-with-settings');
       const data = response.data;
       
-      // Calculate if it's past deadline
-      const now = new Date();
-      const deadline = new Date(data.settings.payment_deadline);
-      const isLate = now > deadline;
+      // Use backend-calculated system status instead of client-side calculation
+      const systemStatus = data.system_status || {};
       
       return {
-        is_open: data.settings.system_open,
-        deadline: data.settings.payment_deadline,
-        is_late_fee: isLate,
-        current_fee: isLate ? data.settings.late_payment_fee : data.settings.payment_amount,
-        payment_amount: data.settings.payment_amount,
-        late_payment_fee: data.settings.late_payment_fee,
-        countdown_title: data.settings.countdown_title,
-        countdown_message: data.settings.countdown_message
+        is_open: systemStatus.is_open ?? data.settings.system_open,
+        deadline: systemStatus.deadline ?? data.settings.payment_deadline,
+        is_late_fee: systemStatus.is_late_fee ?? false,
+        current_fee: systemStatus.current_fee ?? data.settings.payment_amount,
+        payment_amount: systemStatus.payment_amount ?? data.settings.payment_amount,
+        late_payment_fee: systemStatus.late_payment_fee ?? data.settings.late_payment_fee,
+        countdown_title: systemStatus.countdown_title ?? data.settings.countdown_title,
+        countdown_message: systemStatus.countdown_message ?? data.settings.countdown_message
       };
     } catch (error) {
       console.error('Error fetching system status with settings:', error);

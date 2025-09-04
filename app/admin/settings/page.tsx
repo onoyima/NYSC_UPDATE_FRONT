@@ -475,7 +475,7 @@ const AdminSettingsPage: React.FC = () => {
                             type="number"
                             value={paymentSettings?.payment_amount || 0}
                             onChange={(e) => updatePaymentSetting('payment_amount', parseFloat(e.target.value))}
-                            placeholder="5000"
+                            placeholder="Enter payment amount"
                           />
                         </div>
                         <div className="space-y-2">
@@ -485,7 +485,7 @@ const AdminSettingsPage: React.FC = () => {
                             type="number"
                             value={paymentSettings?.late_payment_fee || 0}
                             onChange={(e) => updatePaymentSetting('late_payment_fee', parseFloat(e.target.value))}
-                            placeholder="10000"
+                            placeholder="Enter late payment fee"
                           />
                         </div>
                         <div className="space-y-2">

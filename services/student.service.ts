@@ -138,21 +138,41 @@ class StudentService {
   // Get system status for payment information with dynamic settings
   async getSystemStatus(): Promise<SystemStatusWithSettings> {
     try {
-      return await adminSettingsService.getSystemStatusWithSettings();
-    } catch (error) {
-      console.error('Error fetching system status with settings:', error);
-      // Fallback to basic system status
-      const response = await axiosInstance.get('/api/nysc/admin/dashboard');
+      // Use the public system status endpoint (no authentication required)
+      const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/';
+      const response = await fetch(`${baseURL}api/nysc/system-status`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (!result.success || !result.data) {
+        throw new Error('Invalid response format');
+      }
+
+      const data = result.data;
+      
+      // Map the response to our expected format
       return {
-        is_open: response.data.system_status?.is_open || false,
-        deadline: response.data.system_status?.deadline || '2026-12-31',
-        is_late_fee: response.data.system_status?.is_late_fee || false,
-        current_fee: response.data.system_status?.current_fee || 0,
-      payment_amount: response.data.system_status?.payment_amount || 0,
-      late_payment_fee: response.data.system_status?.late_payment_fee || 0,
-        countdown_title: 'Payment Deadline',
-        countdown_message: 'Complete your payment before the deadline'
+        is_open: data.is_open,
+        deadline: data.deadline,
+        is_late_fee: data.is_late_fee,
+        current_fee: data.current_fee,
+        payment_amount: data.payment_amount,
+        late_payment_fee: data.late_payment_fee,
+        countdown_title: data.countdown_title,
+        countdown_message: data.countdown_message,
       };
+    } catch (error) {
+      console.error('Failed to get system status:', error);
+      throw error;
     }
   }
 }

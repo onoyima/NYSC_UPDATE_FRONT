@@ -54,7 +54,7 @@ const studentNavItems: NavItem[] = [
   },
   {
     title: 'Data Management',
-    href: '/admin/data',
+    href: '/data',
     icon: FileText,
   },
   {
@@ -84,6 +84,11 @@ const adminNavItems: NavItem[] = [
     title: 'Students',
     href: '/admin/students',
     icon: Users,
+  },
+  {
+    title: 'Data Management',
+    href: '/data',
+    icon: FileText,
   },
   {
     title: 'Payments',
@@ -133,6 +138,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         case '/admin':
           return true; // Dashboard is always visible
         case '/admin/students':
+          return hasPermission(userRole, 'canViewStudentNysc');
+        case '/data':
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/payments':
           return hasPermission(userRole, 'canViewPayments');
