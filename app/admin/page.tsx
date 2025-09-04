@@ -21,7 +21,7 @@ import { formatDate } from '@/utils/formatters';
 import { User, Mail, Phone, MapPin, Briefcase, Heart, Users, FileText, BarChart3, Settings, TrendingUp, Activity, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import adminService from '@/services/admin.service';
-import WhatsAppIcon from '@/components/common/WhatsAppIcon';
+
 
 const AdminDashboard: React.FC = () => {
   const { user, userType, userRole, isLoading } = useAuth();
@@ -723,7 +723,7 @@ const AdminDashboard: React.FC = () => {
           </main>
       
       {/* WhatsApp Icon */}
-      <WhatsAppIcon />
+      
       </div>
     </ProtectedRoute>
   );

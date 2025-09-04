@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SidebarProvider } from '@/contexts/SidebarContext';
 import { Toaster } from '@/components/ui/sonner';
+import WhatsAppButton from '@/components/common/WhatsAppButton';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -32,6 +33,7 @@ export default function RootLayout({
             <SidebarProvider>
               {children}
               <Toaster />
+              <WhatsAppButton />
             </SidebarProvider>
           </AuthProvider>
         </ThemeProvider>

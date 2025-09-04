@@ -304,43 +304,9 @@ const PaymentHistoryPage: React.FC = () => {
                         <span className="font-medium text-gray-900 dark:text-white">{selectedReceipt.student.matric_number}</span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                        <span className="text-gray-600 dark:text-gray-400">Username:</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{selectedReceipt.student.username}</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
                         <span className="text-gray-600 dark:text-gray-400">Email:</span>
                         <span className="font-medium text-gray-900 dark:text-white break-all">{selectedReceipt.student.email}</span>
                       </div>
-                      {selectedReceipt.student.phone && (
-                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                          <span className="text-gray-600 dark:text-gray-400">Phone:</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{selectedReceipt.student.phone}</span>
-                        </div>
-                      )}
-                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                        <span className="text-gray-600 dark:text-gray-400">Institution:</span>
-                        <span className="font-medium text-gray-900 dark:text-white break-words">{selectedReceipt.student.institution}</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                        <span className="text-gray-600 dark:text-gray-400">Course of Study:</span>
-                        <span className="font-medium text-gray-900 dark:text-white break-words">{selectedReceipt.student.course_of_study}</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                        <span className="text-gray-600 dark:text-gray-400">Year of Graduation:</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{selectedReceipt.student.year_of_graduation}</span>
-                      </div>
-                      {selectedReceipt.student.state && (
-                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                          <span className="text-gray-600 dark:text-gray-400">State:</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{selectedReceipt.student.state}</span>
-                        </div>
-                      )}
-                      {selectedReceipt.student.lga && (
-                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                          <span className="text-gray-600 dark:text-gray-400">LGA:</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{selectedReceipt.student.lga}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}

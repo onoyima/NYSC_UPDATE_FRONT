@@ -11,7 +11,7 @@ import ProtectedRoute from '@/components/common/ProtectedRoute';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import CountdownTimer from '@/components/common/CountdownTimer';
 import DeadlineModal from '@/components/common/DeadlineModal';
-import WhatsAppIcon from '@/components/common/WhatsAppIcon';
+
 import { useAuth } from '@/hooks/useAuth';
 import { Student } from '@/types/auth.types';
 import studentService from '@/services/student.service';
@@ -396,8 +396,7 @@ const StudentDashboard: React.FC = () => {
            />
          )}
          
-         {/* WhatsApp Icon */}
-         <WhatsAppIcon />
+
       </div>
     </ProtectedRoute>
   );
