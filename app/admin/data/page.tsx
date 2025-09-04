@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from '@/utils/axios';
 import { saveAs } from 'file-saver';
 import { ExclamationTriangleIcon, MagnifyingGlassIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
@@ -91,6 +91,7 @@ export default function AdminDataPage() {
   }
 
   return (
+    <div className="relative">
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Modern Header with Logo */}
       <header className="bg-white shadow-lg border-b border-gray-200">

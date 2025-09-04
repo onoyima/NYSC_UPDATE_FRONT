@@ -230,6 +230,23 @@ class AdminService {
     return response.data;
   }
 
+  // Get payment details for a specific student
+  async getPaymentDetails(studentId: string) {
+    const response = await axiosInstance.get(`/api/nysc/admin/students/${studentId}`);
+    return response.data;
+  }
+
+  // Process refund for a payment
+  async processRefund(paymentId: string | number) {
+    const response = await axiosInstance.post(`/api/nysc/admin/payments/${paymentId}/refund`);
+    return response.data;
+  }
+
+  // Retry payment for a failed payment
+  async retryPayment(paymentId: string | number) {
+    const response = await axiosInstance.post(`/api/nysc/admin/payments/${paymentId}/retry`);
+    return response.data;
+  }
 
 }
 
