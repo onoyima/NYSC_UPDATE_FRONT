@@ -124,7 +124,7 @@ class AdminService {
 
   // Cache management
   async clearCache() {
-    const response = await axiosInstance.post('/api/nysc/admin/cache/clear');
+    const response = await axiosInstance.post('/api/nysc/admin/settings/clear-cache');
     return response;
   }
 
