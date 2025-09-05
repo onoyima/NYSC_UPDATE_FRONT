@@ -81,7 +81,7 @@ export default function AdminDataPage() {
       console.log('User type:', userType);
       console.log('Is admin:', isAdmin);
       
-      const resp = await axios.get(`/api/nysc/export/${fmt}`, { responseType: 'blob' });
+      const resp = await axios.get(`/api/nysc/exports/${fmt}`, { responseType: 'blob' });
       console.log('Download response:', resp);
       
       const filename = `nysc_data_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.${fmt}`;

@@ -76,7 +76,7 @@ export default function AdminDataPage() {
 
   const handleDownload = async (fmt: 'csv' | 'xlsx' | 'pdf') => {
     try {
-      const resp = await axios.get(`/api/nysc/export/${fmt}`, { responseType: 'blob' });
+      const resp = await axios.get(`/api/nysc/exports/${fmt}`, { responseType: 'blob' });
       const filename = `nysc_data_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.${fmt}`;
       saveAs(resp.data, filename);
     } catch (e) {
