@@ -41,8 +41,8 @@ export default function DuplicatePaymentsPage() {
     setLoading(true);
     try {
       const response = await adminService.getDuplicatePayments(currentPage, 10, searchTerm);
-      setDuplicatePayments(response.duplicatePayments);
-      setStats(response.stats);
+      setDuplicatePayments(response.duplicate_payments);
+      setStats(response.statistics);
       setTotalPages(response.totalPages);
       setTotalRecords(response.total);
     } catch (error) {

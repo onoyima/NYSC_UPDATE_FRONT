@@ -97,7 +97,7 @@ class AdminService {
   }
 
   // Duplicate payments method
-  async getDuplicatePayments(page = 1, limit = 10, search?: string): Promise<{ duplicatePayments: DuplicatePaymentData[]; stats: any; total: number; totalPages: number }> {
+  async getDuplicatePayments(page = 1, limit = 10, search?: string): Promise<{ duplicate_payments: DuplicatePaymentData[]; statistics: any; total: number; totalPages: number }> {
     const response = await axiosInstance.get('/api/nysc/admin/duplicate-payments', {
       params: { page, limit, search }
     });
