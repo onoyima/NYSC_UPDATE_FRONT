@@ -96,6 +96,11 @@ const adminNavItems: NavItem[] = [
     icon: CreditCard,
   },
   {
+    title: 'Duplicate Payments',
+    href: '/admin/duplicate-payments',
+    icon: Receipt,
+  },
+  {
     title: 'Submissions',
     href: '/admin/submissions',
     icon: FileText,
@@ -142,6 +147,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         case '/data':
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/payments':
+          return hasPermission(userRole, 'canViewPayments');
+        case '/admin/duplicate-payments':
           return hasPermission(userRole, 'canViewPayments');
         case '/admin/submissions':
           return hasPermission(userRole, 'canViewTempSubmissions');

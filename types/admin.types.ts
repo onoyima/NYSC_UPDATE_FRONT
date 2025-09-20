@@ -93,6 +93,26 @@ export interface PaymentRecord {
   updated_at: string;
 }
 
+// Interface for duplicate payment data
+export interface DuplicatePaymentData {
+  student_id: number;
+  student_name: string;
+  matric_number: string;
+  email: string;
+  department: string;
+  payments: {
+    id: number;
+    amount: number;
+    payment_method: 'paystack' | 'bank_transfer' | 'cash';
+    payment_status: 'successful';
+    transaction_reference: string;
+    payment_date: string;
+  }[];
+  total_paid: number;
+  expected_amount: number;
+  overpayment: number;
+}
+
 export interface ExportOptions {
   format: 'csv' | 'excel' | 'pdf';
   filters?: {

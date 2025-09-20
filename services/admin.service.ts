@@ -1,5 +1,5 @@
 import axiosInstance from '@/utils/axios';
-import { AdminDashboardStats, SystemControl, PaymentRecord, ExportOptions } from '@/types/admin.types';
+import { AdminDashboardStats, SystemControl, PaymentRecord, ExportOptions, DuplicatePaymentData } from '@/types/admin.types';
 import { Student } from '@/types/auth.types';
 
 class AdminService {
@@ -94,6 +94,14 @@ class AdminService {
       responseType: 'blob'
     });
     return response;
+  }
+
+  // Duplicate payments method
+  async getDuplicatePayments(page = 1, limit = 10, search?: string): Promise<{ duplicatePayments: DuplicatePaymentData[]; stats: any; total: number; totalPages: number }> {
+    const response = await axiosInstance.get('/api/nysc/admin/duplicate-payments', {
+      params: { page, limit, search }
+    });
+    return response.data;
   }
 
   // System settings methods

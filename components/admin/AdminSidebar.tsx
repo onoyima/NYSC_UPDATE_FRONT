@@ -61,6 +61,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
       permission: 'canViewPayments'
     },
     {
+      name: 'Duplicate Payments',
+      href: '/admin/duplicate-payments',
+      icon: CreditCardIcon,
+      permission: 'canViewPayments'
+    },
+    {
       name: 'Temp Submissions',
       href: '/admin/temp-submissions',
       icon: ClipboardDocumentListIcon,
