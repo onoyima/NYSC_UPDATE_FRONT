@@ -24,11 +24,11 @@ export const loginSchema = yup.object({
   identity: yup.string()
     .required('Matric number or email is required')
     .min(3, 'Please enter a valid matric number or email'),
-  password: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
+  password: yup.string().required('Password is required'),
 });
 
 // Legacy schemas for backward compatibility
 export const adminLoginSchema = yup.object({
   email: yup.string().required('Email is required').email('Please enter a valid email address'),
-  password: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
+  password: yup.string().required('Password is required'),
 });

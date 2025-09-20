@@ -34,11 +34,11 @@ const LoginPage: React.FC = () => {
   const onSubmit = async (data: LoginCredentials) => {
     try {
       const response = await login(data);
-      
+
       // Ensure we have a valid response
       if (response && response.userType && response.token) {
         console.log('Redirecting to:', response.userType === 'student' ? '/student' : '/admin');
-        
+
         // Use replace instead of push to prevent back navigation issues
         if (response.userType === 'student') {
           router.replace('/student');
