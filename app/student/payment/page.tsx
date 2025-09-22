@@ -383,13 +383,13 @@ const PaymentPage: React.FC = () => {
                       <div>
                         <span className="text-muted-foreground">Email:</span>
                         <span className="ml-2 font-medium">
-                          {studentDetails?.student?.username || user?.email}
+                          {studentDetails?.nysc?.email || studentDetails?.student?.username || user?.email}
                         </span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Phone:</span>
                         <span className="ml-2 font-medium">
-                          {studentDetails?.student?.phone || 'N/A'}
+                          {studentDetails?.nysc?.phone || studentDetails?.student?.phone || 'N/A'}
                         </span>
                       </div>
                     </div>

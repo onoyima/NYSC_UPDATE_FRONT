@@ -10,7 +10,8 @@ import {
   UsersIcon,
   ChartBarIcon,
   Cog6ToothIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
@@ -34,6 +35,14 @@ const QuickActions: React.FC = () => {
   const isSuperAdmin = userType === 'admin' && user?.id === 596;
 
   const quickActions: QuickAction[] = [
+    {
+      id: 'excel-import',
+      title: 'Excel Import',
+      description: 'Import data from CSV files',
+      icon: DocumentTextIcon,
+      href: '/admin/excel-import',
+      color: 'bg-teal-500 hover:bg-teal-600'
+    },
     {
       id: 'add-student',
       title: 'Add Student',

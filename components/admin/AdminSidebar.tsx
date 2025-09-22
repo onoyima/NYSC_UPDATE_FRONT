@@ -85,6 +85,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
       permission: 'canDownloadData'
     },
     {
+      name: 'Excel Import',
+      href: '/admin/excel-import',
+      icon: DocumentTextIcon,
+      permission: 'canManageSystem'
+    },
+    {
       name: 'User Management',
       href: '/admin/users',
       icon: UserGroupIcon,
@@ -98,10 +104,19 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
     },
   ];
 
-  const filteredNavItems = navigationItems.filter(item => {
+  // Add console log to debug permissions
+  console.log('User permissions:', userRole);
+  
+  // Filter items based on permissions
+  const filteredItems = navigationItems.filter(item => {
     if (!item.permission) return true;
-    return hasPermission(item.permission as any);
+    const hasAccess = hasPermission(item.permission as any);
+    console.log(`Item: ${item.name}, Permission: ${item.permission}, Has Access: ${hasAccess}`);
+    return hasAccess;
   });
+  
+  // Use filtered items directly
+  const filteredNavItems = filteredItems;
 
   const handleNavigation = (href: string) => {
     router.push(href);

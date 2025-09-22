@@ -212,7 +212,7 @@ const StudentDashboard: React.FC = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="hover-lift animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+                {/* <Card className="hover-lift animate-fade-in-up" style={{animationDelay: '0.3s'}}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -225,7 +225,7 @@ const StudentDashboard: React.FC = () => {
                       Total successful payments
                     </p>
                   </CardContent>
-                </Card>
+                </Card> */}
 
                 <Card className="hover-lift animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

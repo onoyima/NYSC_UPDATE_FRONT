@@ -1,5 +1,14 @@
 import { Student } from './auth.types';
 
+// Excel Import Types
+export interface EligibleImportRecord {
+  matric_no: string;
+  student_name: string;
+  department?: string;
+  level?: string;
+  program?: string;
+}
+
 export interface AdminDashboardStats {
   totalStudents: number;
   confirmedData: number;
