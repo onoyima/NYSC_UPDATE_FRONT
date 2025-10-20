@@ -23,45 +23,29 @@ import {
   PhoneIcon,
   MapPinIcon,
   ExclamationTriangleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import adminService from '@/services/admin.service';
+import { PaymentRecord, PaymentHistoryRecord } from '@/types/admin.types';
 
-interface PaymentDetails {
-  id: number;
-  student_id: number;
-  student_name: string;
-  matric_number: string;
-  email: string;
-  phone: string;
-  department: string;
-  faculty: string;
-  level: string;
-  amount: number;
-  payment_method: 'paystack' | 'bank_transfer' | 'cash';
-  payment_status: 'pending' | 'successful' | 'failed' | 'refunded';
-  transaction_reference: string;
-  gateway_reference?: string;
-  payment_date: string;
-  created_at: string;
-  updated_at: string;
+// Extending PaymentRecord with additional fields specific to this page
+interface PaymentDetails extends PaymentRecord {
+  phone?: string;
+  faculty?: string;
+  level?: string;
   failure_reason?: string;
   refund_reason?: string;
   refund_date?: string;
-  gateway_response?: any;
 }
 
-interface PaymentHistory {
-  id: number;
-  action: string;
-  status: string;
+// Using PaymentHistoryRecord from admin.types.ts
+interface PaymentHistory extends PaymentHistoryRecord {
   amount?: number;
   reference?: string;
-  timestamp: string;
   notes?: string;
-  performed_by: string;
 }
 
 const PaymentDetailsPage: React.FC = () => {
@@ -74,6 +58,7 @@ const PaymentDetailsPage: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -95,8 +80,9 @@ const PaymentDetailsPage: React.FC = () => {
       try {
         setIsLoadingData(true);
         // Fetch actual payment details from API
-        const response = await adminService.getPaymentDetails(paymentId);
-        setPayment(response.payment);
+        const response = await adminService.getPaymentDetails(Number(paymentId));
+        // Handle both cases: direct payment object or wrapped in a property
+        setPayment(response.payment || response);
         setPaymentHistory(response.history || []);
       } catch (error) {
         console.error('Error fetching payment details:', error);
@@ -181,6 +167,26 @@ const PaymentDetailsPage: React.FC = () => {
     toast.success('Copied to clipboard');
   };
 
+  const handleVerifyPayment = async () => {
+    if (!payment) return;
+    
+    try {
+      setIsVerifying(true);
+      const response = await adminService.verifyPayment(payment.id);
+      // Handle both cases: direct payment object or wrapped in a property
+      const updatedPayment = response.payment || response;
+      setPayment(updatedPayment);
+      toast.success('Payment verified successfully');
+      // Refresh the page to show updated data
+      router.refresh();
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      toast.error('Failed to verify payment');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const handleRefund = async () => {
     if (!payment || payment.payment_status !== 'successful') {
       toast.error('Only successful payments can be refunded');
@@ -198,8 +204,9 @@ const PaymentDetailsPage: React.FC = () => {
       await adminService.processRefund(payment.id);
       toast.success('Payment refunded successfully');
       // Refresh payment data after successful refund
-      const response = await adminService.getPaymentDetails(paymentId);
-      setPayment(response.payment);
+      const response = await adminService.getPaymentDetails(Number(paymentId));
+      // Handle both cases: direct payment object or wrapped in a property
+      setPayment(response.payment || response);
       setPaymentHistory(response.history || []);
     } catch (error) {
       console.error('Error processing refund:', error);
@@ -220,8 +227,9 @@ const PaymentDetailsPage: React.FC = () => {
       await adminService.retryPayment(payment.id);
       toast.success('Payment retry initiated successfully');
       // Refresh payment data after successful retry
-      const response = await adminService.getPaymentDetails(paymentId);
-      setPayment(response.payment);
+      const response = await adminService.getPaymentDetails(Number(paymentId));
+      // Handle both cases: direct payment object or wrapped in a property
+      setPayment(response.payment || response);
       setPaymentHistory(response.history || []);
     } catch (error) {
       console.error('Error retrying payment:', error);
@@ -272,6 +280,47 @@ const PaymentDetailsPage: React.FC = () => {
                     Transaction ID: {paymentId}
                   </p>
                 </div>
+
+                {/* Payment History Section */}
+                {paymentHistory && paymentHistory.length > 0 && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                      Payment History
+                    </h2>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Timestamp</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Performed By</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                          {paymentHistory.map((history, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/50'}>
+                              <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{history.action}</td>
+                              <td className="px-4 py-3 text-sm">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  history.status === 'successful' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                                  history.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                                  history.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                                  'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                                }`}>
+                                  {history.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{formatDate(history.timestamp)}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{history.performed_by}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -369,6 +418,21 @@ const PaymentDetailsPage: React.FC = () => {
                   
                   {/* Action Buttons */}
                   <div className="mt-6 flex space-x-3">
+                    {payment.payment_status === 'pending' && hasPermission('canEditPayments') && (
+                      <button
+                        onClick={handleVerifyPayment}
+                        disabled={isVerifying}
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
+                      >
+                        {isVerifying ? (
+                          <LoadingSpinner size="sm" className="mr-2" />
+                        ) : (
+                          <CheckIcon className="h-4 w-4 mr-2" />
+                        )}
+                        Verify Payment
+                      </button>
+                    )}
+                    
                     {payment.payment_status === 'successful' && hasPermission('canEditPayments') && (
                       <button
                         onClick={handleRefund}

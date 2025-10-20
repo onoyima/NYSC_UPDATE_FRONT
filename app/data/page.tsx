@@ -15,6 +15,7 @@ interface StudentData {
   phone: string;
   state: string;
   cgpa: string;
+  class_of_degree: string;
   dob: string;
   graduation_year: number;
   is_status?: boolean;
@@ -254,6 +255,7 @@ export default function AdminDataPage() {
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CGPA</th>
+                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class of Degree</th>
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DOB</th>
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Graduation Year</th>
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -278,6 +280,25 @@ export default function AdminDataPage() {
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                   {isAdmin ? s.cgpa : '****'}
                                 </span>
+                              </td>
+                              <td className="px-1 py-2 text-xs">
+                                {s.class_of_degree ? (
+                                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                    s.class_of_degree === 'First Class' 
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : s.class_of_degree === 'Second Class Upper'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : s.class_of_degree === 'Second Class Lower'
+                                      ? 'bg-green-100 text-green-800'
+                                      : s.class_of_degree === 'Third Class'
+                                      ? 'bg-orange-100 text-orange-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {s.class_of_degree}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400 italic">Not set</span>
+                                )}
                               </td>
                               <td className="px-1 py-2 text-xs text-gray-700">{isAdmin ? formatDate(s.dob) : '**/**/****'}</td>
                               <td className="px-1 py-2 text-xs text-gray-700">{s.graduation_year}</td>
@@ -337,6 +358,7 @@ export default function AdminDataPage() {
                         { label: 'Phone', key: 'phone' },
                         { label: 'State', key: 'state' },
                         { label: 'CGPA', key: 'cgpa' },
+                        { label: 'Class of Degree', key: 'class_of_degree' },
                         { label: 'DOB', key: 'dob' },
                         { label: 'Graduation Year', key: 'graduation_year' },
                         { label: 'Status', key: 'is_status' },
@@ -367,7 +389,7 @@ export default function AdminDataPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sorted.length === 0 ? (
                       <tr>
-                        <td colSpan={16} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={17} className="px-6 py-12 text-center text-gray-500">
                           <div className="flex flex-col items-center">
                             <MagnifyingGlassIcon className="w-12 h-12 text-gray-300 mb-4" />
                             <p className="text-lg font-medium">No students found</p>
@@ -405,6 +427,25 @@ export default function AdminDataPage() {
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               {isAdmin ? s.cgpa : '****'}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {s.class_of_degree ? (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                s.class_of_degree === 'First Class' 
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : s.class_of_degree === 'Second Class Upper'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : s.class_of_degree === 'Second Class Lower'
+                                  ? 'bg-green-100 text-green-800'
+                                  : s.class_of_degree === 'Third Class'
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {s.class_of_degree}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 italic">Not set</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {isAdmin ? formatDate(s.dob) : '**/**/****'}

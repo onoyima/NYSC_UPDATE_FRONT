@@ -10,6 +10,8 @@ import DashboardStats from '@/components/admin/DashboardStats';
 import AnalyticsCharts from '@/components/admin/AnalyticsCharts';
 import RecentActivity from '@/components/admin/RecentActivity';
 import QuickActions from '@/components/admin/QuickActions';
+import ExportButton from '@/components/admin/ExportButton';
+import NyscExportButton from '@/components/admin/NyscExportButton';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { AdminDashboardStats } from '@/types/admin.types';
 import { toast } from 'sonner';
@@ -79,19 +81,32 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Welcome back, {user?.fname || user?.name}! Here&apos;s your NYSC management overview.
-            </p>
-            <div className="mt-4 flex items-center space-x-4">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                Role: {userRole?.replace('_', ' ').toUpperCase()}
-              </span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Last updated: {new Date().toLocaleString()}
-              </span>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  Admin Dashboard
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Welcome back, {user?.fname || user?.name}! Here&apos;s your NYSC management overview.
+                </p>
+                <div className="mt-4 flex items-center space-x-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    Role: {userRole?.replace('_', ' ').toUpperCase()}
+                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Last updated: {new Date().toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Export Actions */}
+              <div className="flex flex-col items-end gap-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Export Data</span>
+                <div className="flex gap-2">
+                  <NyscExportButton size="sm" />
+                  <ExportButton />
+                </div>
+              </div>
             </div>
           </div>
 

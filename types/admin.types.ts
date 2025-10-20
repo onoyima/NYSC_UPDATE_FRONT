@@ -86,6 +86,16 @@ export interface SystemControl {
   lastUpdatedAt: string;
 }
 
+export interface PaymentHistoryRecord {
+  id: number;
+  payment_id: number;
+  action: string;
+  status: string;
+  timestamp: string;
+  performed_by: string;
+  details?: string;
+}
+
 export interface PaymentRecord {
   id: number;
   student_id: number;
@@ -98,6 +108,10 @@ export interface PaymentRecord {
   payment_status: 'pending' | 'successful' | 'failed' | 'refunded';
   transaction_reference: string;
   payment_date: string;
+  gateway_reference?: string;
+  gateway_response?: any;
+  payment?: PaymentRecord;
+  history?: PaymentHistoryRecord[];
   created_at: string;
   updated_at: string;
 }

@@ -24,7 +24,9 @@ import {
   MessageSquare,
   HelpCircle,
   Receipt,
-  UserCheck
+  UserCheck,
+  Download,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -86,6 +88,11 @@ const adminNavItems: NavItem[] = [
     icon: Users,
   },
   {
+    title: 'Students List',
+    href: '/admin/students-list',
+    icon: Users,
+  },
+  {
     title: 'Data Management',
     href: '/data',
     icon: FileText,
@@ -109,6 +116,26 @@ const adminNavItems: NavItem[] = [
     title: 'Exports',
     href: '/admin/exports',
     icon: BarChart3,
+  },
+  {
+    title: 'DOCX Import',
+    href: '/admin/docx-import',
+    icon: FileText,
+  },
+  {
+    title: 'GRADUANDS Review',
+    href: '/admin/graduands-review',
+    icon: FileText,
+  },
+  {
+    title: 'CSV Export',
+    href: '/admin/csv-export',
+    icon: Download,
+  },
+  {
+    title: 'NULL Degree Export',
+    href: '/admin/null-degree-export',
+    icon: AlertTriangle,
   },
   {
     title: 'Admin Users',
@@ -135,15 +162,23 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
 
   // Filter admin navigation items based on user permissions
   const getFilteredAdminNavItems = () => {
-    if (!user?.id) return [];
+    if (!user?.id) {
+      console.log('No user ID found');
+      return [];
+    }
     
     const userRole = getUserRole(user.id);
-    return adminNavItems.filter(item => {
+    console.log('User role:', userRole);
+    console.log('Total admin nav items:', adminNavItems.length);
+    
+    const filteredItems = adminNavItems.filter(item => {
       switch (item.href) {
         case '/admin':
           return true; // Dashboard is always visible
         case '/admin/students':
           return hasPermission(userRole, 'canViewStudentNysc');
+        case '/admin/students-list':
+          return true; // Temporarily remove permission check for testing
         case '/data':
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/payments':
@@ -153,6 +188,14 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         case '/admin/submissions':
           return hasPermission(userRole, 'canViewTempSubmissions');
         case '/admin/exports':
+          return hasPermission(userRole, 'canDownloadData');
+        case '/admin/docx-import':
+          return hasPermission(userRole, 'canManageSystem');
+        case '/admin/graduands-review':
+          return hasPermission(userRole, 'canManageSystem');
+        case '/admin/csv-export':
+          return hasPermission(userRole, 'canDownloadData');
+        case '/admin/null-degree-export':
           return hasPermission(userRole, 'canDownloadData');
         case '/admin/admin-users':
           return hasPermission(userRole, 'canAssignRoles');
@@ -164,6 +207,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return true;
       }
     });
+    
+    console.log('Filtered admin nav items:', filteredItems.length);
+    console.log('Items:', filteredItems.map(item => item.title));
+    
+    return filteredItems;
   };
 
   const navItems = userType === 'admin' ? getFilteredAdminNavItems() : studentNavItems;

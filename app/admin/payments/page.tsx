@@ -59,7 +59,17 @@ const PaymentManagement: React.FC = () => {
       try {
         setIsLoadingData(true);
         // Fetch real payment data from the backend API
-        const response = await adminService.getPayments(currentPage, itemsPerPage);
+        const response = await adminService.getPayments(
+          currentPage, 
+          itemsPerPage, 
+          {
+            status: filterStatus,
+            method: filterMethod,
+            search: searchTerm,
+            dateStart: dateRange.start,
+            dateEnd: dateRange.end
+          }
+        );
         setPayments(response.payments || []);
       } catch (error) {
         console.error('Error fetching payments:', error);
@@ -72,7 +82,7 @@ const PaymentManagement: React.FC = () => {
     if (userType === 'admin' && hasPermission('canViewPayments')) {
       fetchPayments();
     }
-  }, [userType, hasPermission, currentPage, itemsPerPage]);
+  }, [userType, hasPermission, currentPage, itemsPerPage, filterStatus, filterMethod, searchTerm, dateRange]);
 
   // Filter and search logic
   const filteredPayments = payments.filter(payment => {
@@ -262,15 +272,23 @@ const PaymentManagement: React.FC = () => {
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  Payment Management
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Monitor and manage payment transactions
-                </p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Payment Management
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Monitor and manage payment transactions
+              </p>
             </div>
+            <div className="flex space-x-2">
+              <Link href="/admin/payments/pending">
+                <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                  <ClockIcon className="h-5 w-5 mr-2" />
+                  Pending Payments
+                </button>
+              </Link>
+            </div>
+          </div>
           </div>
 
           {/* Summary Cards */}
