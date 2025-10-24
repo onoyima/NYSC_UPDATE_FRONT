@@ -13,6 +13,7 @@ import QuickActions from '@/components/admin/QuickActions';
 import ExportButton from '@/components/admin/ExportButton';
 import NyscExportButton from '@/components/admin/NyscExportButton';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import PendingPaymentsWidget from '@/components/admin/PendingPaymentsWidget';
 import { AdminDashboardStats } from '@/types/admin.types';
 import { toast } from 'sonner';
 import adminService from '@/services/admin.service';
@@ -118,6 +119,9 @@ const AdminDashboard = () => {
             <div className="space-y-8">
               {/* Dashboard Stats */}
               <DashboardStats data={dashboardData} />
+              
+              {/* Pending Payments Widget */}
+              <PendingPaymentsWidget />
               
               {/* Quick Actions */}
               <QuickActions />

@@ -21,6 +21,9 @@ export interface ReviewData {
   approved: boolean;
   source: string;
   row_number: number | null;
+  match_type?: 'exact' | 'similar';
+  graduands_matric?: string;
+  similarity_type?: string;
 }
 
 interface ImportReviewTableProps {
@@ -198,7 +201,7 @@ const ImportReviewTable: React.FC<ImportReviewTableProps> = ({
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  onClick={() => onBulkApproval(true)}
+                  onClick={() => handleSelectAll(true)}
                   disabled={isLoading}
                 >
                   Approve All Filtered
@@ -206,10 +209,18 @@ const ImportReviewTable: React.FC<ImportReviewTableProps> = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => onBulkApproval(false)}
+                  onClick={() => handleSelectAll(false)}
                   disabled={isLoading}
                 >
                   Reject All Filtered
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => onBulkApproval(true)}
+                  disabled={isLoading}
+                >
+                  Approve All Records
                 </Button>
               </div>
             </div>
@@ -225,6 +236,7 @@ const ImportReviewTable: React.FC<ImportReviewTableProps> = ({
                   <TableHead>Student Name</TableHead>
                   <TableHead>Current Class</TableHead>
                   <TableHead>Proposed Class</TableHead>
+                  <TableHead>Match Type</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Source</TableHead>
                 </TableRow>
@@ -232,7 +244,7 @@ const ImportReviewTable: React.FC<ImportReviewTableProps> = ({
               <TableBody>
                 {filteredData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                       {searchTerm || filterType !== 'all' 
                         ? 'No records match your filters' 
                         : 'No data available'
@@ -273,6 +285,37 @@ const ImportReviewTable: React.FC<ImportReviewTableProps> = ({
                         >
                           {item.proposed_class_of_degree}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          {item.match_type === 'exact' ? (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Exact Match
+                            </Badge>
+                          ) : item.match_type === 'similar' ? (
+                            <div className="space-y-1">
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Similar Match
+                              </Badge>
+                              {item.graduands_matric && (
+                                <div className="text-xs text-gray-600">
+                                  DOCX: {item.graduands_matric}
+                                </div>
+                              )}
+                              {item.similarity_type && (
+                                <div className="text-xs text-gray-500">
+                                  {item.similarity_type}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              Standard
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {!item.needs_update ? (

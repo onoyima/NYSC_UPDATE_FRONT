@@ -26,7 +26,8 @@ import {
   Receipt,
   UserCheck,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -103,6 +104,11 @@ const adminNavItems: NavItem[] = [
     icon: CreditCard,
   },
   {
+    title: 'Pending Payments',
+    href: '/admin/pending-payments',
+    icon: Clock,
+  },
+  {
     title: 'Duplicate Payments',
     href: '/admin/duplicate-payments',
     icon: Receipt,
@@ -136,6 +142,16 @@ const adminNavItems: NavItem[] = [
     title: 'NULL Degree Export',
     href: '/admin/null-degree-export',
     icon: AlertTriangle,
+  },
+  {
+    title: 'Data Analysis',
+    href: '/admin/data-analysis',
+    icon: BarChart3,
+  },
+  {
+    title: 'Upload Analysis',
+    href: '/admin/upload-analysis',
+    icon: FileText,
   },
   {
     title: 'Admin Users',
@@ -183,6 +199,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/payments':
           return hasPermission(userRole, 'canViewPayments');
+        case '/admin/pending-payments':
+          return hasPermission(userRole, 'canViewPayments');
         case '/admin/duplicate-payments':
           return hasPermission(userRole, 'canViewPayments');
         case '/admin/submissions':
@@ -197,6 +215,10 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return hasPermission(userRole, 'canDownloadData');
         case '/admin/null-degree-export':
           return hasPermission(userRole, 'canDownloadData');
+        case '/admin/data-analysis':
+          return hasPermission(userRole, 'canViewAnalytics');
+        case '/admin/upload-analysis':
+          return hasPermission(userRole, 'canViewAnalytics');
         case '/admin/admin-users':
           return hasPermission(userRole, 'canAssignRoles');
         case '/admin/roles':

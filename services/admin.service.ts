@@ -564,6 +564,13 @@ class AdminService {
     return response.data;
   }
 
+  async getDataAnalysis() {
+    const response = await axiosInstance.get('/api/nysc/admin/docx-import/data-analysis', {
+      timeout: 120000 // 2 minutes timeout for comprehensive analysis
+    });
+    return response.data;
+  }
+
   // CSV Export methods
   async exportStudentNyscCsv(): Promise<Blob> {
     const response = await axiosInstance.get('/api/nysc/admin/csv-export/student-data', {
@@ -583,6 +590,45 @@ class AdminService {
   async testCsvExportApi() {
     const response = await axiosInstance.get('/api/nysc/admin/csv-export/test', {
       timeout: 10000 // 10 seconds for test
+    });
+    return response.data;
+  }
+
+  // Pending Payments methods
+  async getPendingPaymentsStats() {
+    const response = await axiosInstance.get('/api/nysc/admin/payments/pending-stats', {
+      timeout: 30000 // 30 seconds timeout
+    });
+    return response.data;
+  }
+
+  async verifyPendingPayments(options: { force?: boolean; limit?: number } = {}) {
+    const response = await axiosInstance.post('/api/nysc/admin/payments/verify-pending', options, {
+      timeout: 120000 // 2 minutes timeout for verification
+    });
+    return response.data;
+  }
+
+  async verifySinglePayment(paymentId: number) {
+    const response = await axiosInstance.post(`/api/nysc/admin/payments/${paymentId}/verify`, {}, {
+      timeout: 30000 // 30 seconds timeout
+    });
+    return response.data;
+  }
+
+  // NYSC Upload Analysis methods
+  async getUploadAnalysis(fileName?: string) {
+    const params = fileName ? { file: fileName } : {};
+    const response = await axiosInstance.get('/api/nysc/admin/upload-analysis', {
+      params,
+      timeout: 120000 // 2 minutes timeout for analysis
+    });
+    return response.data;
+  }
+
+  async exportUnuploadedStudents() {
+    const response = await axiosInstance.get('/api/nysc/admin/upload-analysis/export-unuploaded', {
+      timeout: 60000 // 1 minute timeout for export
     });
     return response.data;
   }

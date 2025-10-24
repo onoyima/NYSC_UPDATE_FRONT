@@ -43,16 +43,23 @@ interface GraduandsMatchData {
     total_students_with_null_degree: number;
     total_extracted_from_docx: number;
     total_matches_found: number;
+    exact_matches: number;
+    similar_matches: number;
     total_unmatched: number;
     current_file: string;
     available_files: GraduandsFile[];
     file_last_modified: string;
   };
-  matches: ReviewData[];
+  matches: (ReviewData & {
+    match_type?: 'exact' | 'similar';
+    graduands_matric?: string;
+    similarity_type?: string;
+  })[];
   unmatched: Array<{
     docx_matric: string;
     normalized_matric: string;
     class_of_degree: string;
+    student_name?: string;
   }>;
   message: string;
 }
@@ -107,7 +114,7 @@ const GraduandsReviewPage = () => {
       setApprovals(initialApprovals);
 
       toast.success(
-        `Found ${result.matches.length} matches, ${result.summary.total_unmatched} unmatched records from ${fileToProcess}`
+        `Found ${result.matches.length} matches (${result.summary.exact_matches || 0} exact, ${result.summary.similar_matches || 0} similar), ${result.summary.total_unmatched} unmatched records from ${fileToProcess}`
       );
     } catch (error) {
       console.error("Error fetching matches:", error);
@@ -454,13 +461,13 @@ const GraduandsReviewPage = () => {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        Total Extracted
+                        Exact Matches
                       </CardTitle>
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <CheckCircle className="h-4 w-4 text-green-600" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
-                        {matchData.summary.total_extracted_from_docx}
+                      <div className="text-2xl font-bold text-green-600">
+                        {matchData.summary.exact_matches || 0}
                       </div>
                     </CardContent>
                   </Card>
@@ -468,7 +475,21 @@ const GraduandsReviewPage = () => {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        Matched Students
+                        Similar Matches
+                      </CardTitle>
+                      <Users className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {matchData.summary.similar_matches || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Total Matches
                       </CardTitle>
                       <Users className="h-4 w-4 text-green-600" />
                     </CardHeader>
@@ -489,20 +510,6 @@ const GraduandsReviewPage = () => {
                     <CardContent>
                       <div className="text-2xl font-bold text-orange-600">
                         {matchData.summary.total_unmatched}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        NULL Degrees
-                      </CardTitle>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {matchData.summary.total_students_with_null_degree}
                       </div>
                     </CardContent>
                   </Card>

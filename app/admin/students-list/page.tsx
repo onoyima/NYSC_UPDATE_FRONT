@@ -46,7 +46,6 @@ import {
 import { toast } from "sonner";
 import adminService from "@/services/admin.service";
 
-
 interface Student {
   id: number;
   matric_no: string;
@@ -468,7 +467,6 @@ const StudentsListPage = () => {
                         </>
                       )}
                     </Button>
-
                   </div>
                 </div>
 
@@ -497,8 +495,6 @@ const StudentsListPage = () => {
                 )}
               </CardContent>
             </Card>
-
-
 
             {/* Filters */}
             <Card className="mb-6">
