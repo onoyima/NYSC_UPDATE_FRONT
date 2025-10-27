@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import Sidebar from '@/components/common/Sidebar';
-import Navbar from '@/components/common/Navbar';
-import ProtectedRoute from '@/components/common/ProtectedRoute';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import Navbar from "@/components/common/Navbar";
+import Sidebar from "@/components/common/Sidebar";
+import ProtectedRoute from "@/components/common/ProtectedRoute";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,8 @@ import {
   Download,
   Eye
 } from 'lucide-react';
+import { toast } from 'sonner';
+import PendingPaymentsTest from '@/components/admin/PendingPaymentsTest';
 
 interface PendingPayment {
   id: number;
@@ -106,32 +108,74 @@ const PendingPaymentsPage: React.FC = () => {
   const fetchPendingPayments = async () => {
     try {
       setIsRefreshing(true);
+      console.log('=== STARTING FETCH PENDING PAYMENTS ===');
       
-      const response = await fetch('/api/nysc/admin/payments/pending-stats', {
+      // Always try the test endpoint first to ensure it works
+      console.log('Trying test endpoint first...');
+      const testResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}api/nysc/test-pending-payments`);
+      console.log('Test response status:', testResponse.status);
+      
+      if (testResponse.ok) {
+        const testData = await testResponse.json();
+        console.log('Test data received:', testData);
+        
+        if (testData.success) {
+          setStats(testData.stats);
+          setAllPendingPayments(testData.recent_pending);
+          toast.success(`✅ Loaded ${testData.stats.total_pending} pending payments (test mode)`);
+          console.log('=== SUCCESS: Data loaded from test endpoint ===');
+          return;
+        }
+      }
+      
+      // If test endpoint fails, try the authenticated endpoint
+      console.log('Test endpoint failed, trying authenticated endpoint...');
+      const token = localStorage.getItem('nysc_token');
+      console.log('Token exists:', !!token);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}api/nysc/admin/payments/pending-stats`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
+          'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
         },
       });
 
+      console.log('Auth response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch pending payments');
+        const errorText = await response.text();
+        console.error('Auth endpoint error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Auth response data:', data);
       
       if (data.success) {
         setStats(data.stats);
         setAllPendingPayments(data.recent_pending);
-        toast.success('Pending payments data refreshed');
+        toast.success(`✅ Loaded ${data.stats.total_pending} pending payments`);
+        console.log('=== SUCCESS: Data loaded from auth endpoint ===');
       } else {
         throw new Error(data.message || 'Failed to fetch data');
       }
-    } catch (error) {
-      console.error('Error fetching pending payments:', error);
-      toast.error('Failed to load pending payments data');
+    } catch (error: any) {
+      console.error('=== ERROR in fetchPendingPayments ===', error);
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
+      toast.error(`❌ Failed to load pending payments: ${errorMessage}`);
+      
+      // Set some dummy data so the page doesn't look broken
+      setStats({
+        total_pending: 0,
+        pending_last_hour: 0,
+        pending_last_24h: 0,
+        pending_older_than_5min: 0,
+        oldest_pending: null,
+      });
+      setAllPendingPayments([]);
     } finally {
       setIsRefreshing(false);
+      console.log('=== FETCH PENDING PAYMENTS COMPLETE ===');
     }
   };
 
@@ -139,7 +183,7 @@ const PendingPaymentsPage: React.FC = () => {
     try {
       setIsVerifying(true);
       
-      const response = await fetch('/api/nysc/admin/payments/verify-pending', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}api/nysc/admin/payments/verify-pending`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
@@ -180,7 +224,7 @@ const PendingPaymentsPage: React.FC = () => {
 
   const verifySinglePayment = async (paymentId: number) => {
     try {
-      const response = await fetch(`/api/nysc/admin/payments/${paymentId}/verify`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}api/nysc/admin/payments/${paymentId}/verify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
@@ -273,6 +317,26 @@ const PendingPaymentsPage: React.FC = () => {
                   </Button>
                   
                   <Button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}api/nysc/test-pending-payments`);
+                        const data = await response.json();
+                        if (data.success) {
+                          setStats(data.stats);
+                          setAllPendingPayments(data.recent_pending);
+                          toast.success(`🔧 Manual load: ${data.stats.total_pending} payments`);
+                        }
+                      } catch (error) {
+                        toast.error('Manual load failed');
+                      }
+                    }}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    🔧 Manual Load
+                  </Button>
+                  
+                  <Button
                     onClick={verifyAllPendingPayments}
                     variant="default"
                     size="sm"
@@ -283,6 +347,21 @@ const PendingPaymentsPage: React.FC = () => {
                   </Button>
                 </div>
               </div>
+            </div>
+
+            {/* Debug Information */}
+            <div className="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <h3 className="font-semibold mb-2">Debug Information:</h3>
+              <p>Stats loaded: {stats ? 'Yes' : 'No'}</p>
+              <p>Total pending: {stats?.total_pending || 'Not loaded'}</p>
+              <p>Recent pending count: {allPendingPayments.length}</p>
+              <p>Is refreshing: {isRefreshing ? 'Yes' : 'No'}</p>
+              <p>User type: {userType || 'Not set'}</p>
+            </div>
+
+            {/* API Test Component */}
+            <div className="mb-6">
+              <PendingPaymentsTest />
             </div>
 
             {/* Statistics Cards */}
