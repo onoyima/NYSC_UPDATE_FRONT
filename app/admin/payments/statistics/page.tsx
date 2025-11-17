@@ -118,6 +118,8 @@ export default function PaymentStatisticsPage() {
           dateEnd: dateEnd || undefined,
           payment_method: paymentMethod || undefined,
           department: department || undefined,
+          amount_type: amountType || undefined,
+          duplicates: duplicates || undefined,
         },
       });
       const url = URL.createObjectURL(blob);
