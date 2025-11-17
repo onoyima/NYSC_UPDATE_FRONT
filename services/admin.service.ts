@@ -67,7 +67,15 @@ class AdminService {
   ): Promise<{ payments: PaymentRecord[]; total: number; totalPages: number }> {
     try {
       const response = await axiosInstance.get("/api/nysc/admin/payments", {
-        params: { page, limit, ...filters },
+        params: {
+          page,
+          per_page: limit,
+          status: filters?.status,
+          payment_method: filters?.method,
+          search: filters?.search,
+          dateStart: filters?.dateStart,
+          dateEnd: filters?.dateEnd,
+        },
       });
 
       // Debug the response structure
@@ -75,8 +83,21 @@ class AdminService {
 
       // Handle different response formats
       if (response.data && response.data.payments) {
-        // Standard format
-        return response.data;
+        const p = response.data.payments;
+        // If Laravel paginator
+        if (p && Array.isArray(p.data)) {
+          return {
+            payments: p.data,
+            total: typeof p.total === 'number' ? p.total : p.data.length,
+            totalPages: typeof p.last_page === 'number' ? p.last_page : 1,
+          };
+        }
+        // If already array
+        if (Array.isArray(p)) {
+          return { payments: p, total: p.length, totalPages: 1 };
+        }
+        // Fallback
+        return { payments: [], total: 0, totalPages: 1 };
       } else if (response.data && Array.isArray(response.data)) {
         // Array format
         return {
@@ -648,8 +669,8 @@ class AdminService {
     return response.data;
   }
 
-  async hideStudentsPayments(studentIds: number[]) {
-    const response = await axiosInstance.post('/api/nysc/admin/payments/statistics/hide', { student_ids: studentIds }, {
+  async hideStudentsPayments(studentIds: number[], options?: { mode?: 'all' | 'duplicates'; action?: 'hide' | 'unhide' }) {
+    const response = await axiosInstance.post('/api/nysc/admin/payments/statistics/hide', { student_ids: studentIds, mode: options?.mode || 'all', action: options?.action || 'hide' }, {
       timeout: 30000
     });
     return response.data;

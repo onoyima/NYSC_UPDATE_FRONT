@@ -25,14 +25,15 @@ export default function PaymentStatisticsPage() {
   const [studentsForHide, setStudentsForHide] = useState<{ student_id: number; name: string; matric: string; department?: string; count: number }[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [hideMode, setHideMode] = useState<'all' | 'duplicates'>('all');
+  const [hideAction, setHideAction] = useState<'hide' | 'unhide'>('hide');
 
   const canHide = useMemo(() => {
     const email = String((user as any)?.email || (user as any)?.p_email || '').toLowerCase();
     return userType === 'admin' && email === 'onoyimab@veritas.edu.ng';
   }, [user, userType]);
 
-  useEffect(() => {
-    const fetchStats = async () => {
+  const fetchStats = async () => {
       try {
         setIsLoadingData(true);
         const response = await adminService.getPaymentStatistics({
@@ -49,7 +50,8 @@ export default function PaymentStatisticsPage() {
       } finally {
         setIsLoadingData(false);
       }
-    };
+  };
+  useEffect(() => {
     if (userType === 'admin') {
       fetchStats();
     }
@@ -142,16 +144,10 @@ export default function PaymentStatisticsPage() {
       return;
     }
     try {
-      const res = await adminService.hideStudentsPayments(selectedStudentIds);
+      const res = await adminService.hideStudentsPayments(selectedStudentIds, { mode: hideMode, action: hideAction });
       toast.success('Payments hidden');
       setSelectedStudentIds([]);
-      const refresh = await adminService.getPaymentStatistics({
-        dateStart: dateStart || undefined,
-        dateEnd: dateEnd || undefined,
-        payment_method: paymentMethod || undefined,
-        department: department || undefined,
-      });
-      setStats(refresh);
+      await fetchStats();
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Failed to hide payments');
     }
@@ -236,7 +232,7 @@ export default function PaymentStatisticsPage() {
                   </select>
                 </div>
                 <div className="flex items-end">
-                  <button onClick={() => {}} className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg">
+                  <button onClick={fetchStats} className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg">
                     Apply
                   </button>
                 </div>
@@ -249,6 +245,31 @@ export default function PaymentStatisticsPage() {
               </div>
             ) : stats ? (
               <>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+                  <h2 className="text-lg font-semibold mb-4">Summary</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Total Students Paid</span>
+                      <span className="text-xl font-semibold text-gray-900 dark:text-white">{stats.summary.total_students_paid}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Total Amount Paid</span>
+                      <span className="text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(stats.summary.total_successful_amount)}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Total Duplicates</span>
+                      <span className="text-xl font-semibold text-gray-900 dark:text-white">{stats.summary.duplicate_payments_count}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Total Normal Fees</span>
+                      <span className="text-xl font-semibold text-gray-900 dark:text-white">{stats.summary.normal_fee_count}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Total Late Fees</span>
+                      <span className="text-xl font-semibold text-gray-900 dark:text-white">{stats.summary.late_fee_count}</span>
+                    </div>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center justify-between">
@@ -337,7 +358,15 @@ export default function PaymentStatisticsPage() {
                       <h2 className="text-lg font-semibold">Hide Student Payments</h2>
                       <div className="flex gap-2">
                         <button onClick={loadStudentsForHide} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg">Load Students</button>
-                        <button onClick={hideSelected} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Hide Selected</button>
+                        <select value={hideMode} onChange={e => setHideMode(e.target.value as any)} className="px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                          <option value="all">All payments</option>
+                          <option value="duplicates">Duplicate payments only</option>
+                        </select>
+                        <select value={hideAction} onChange={e => setHideAction(e.target.value as any)} className="px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                          <option value="hide">Hide</option>
+                          <option value="unhide">Unhide</option>
+                        </select>
+                        <button onClick={hideSelected} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Apply</button>
                       </div>
                     </div>
                     {isLoadingStudents ? (
@@ -355,6 +384,7 @@ export default function PaymentStatisticsPage() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Matric</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Department</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Payments</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Duplicate</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -367,7 +397,8 @@ export default function PaymentStatisticsPage() {
                                   <td className="px-6 py-3">{s.matric}</td>
                                   <td className="px-6 py-3">{s.department || 'N/A'}</td>
                                   <td className="px-6 py-3">{s.count}</td>
-                                </tr>
+                                  <td className="px-6 py-3">{s.count > 1 ? 'Yes' : 'No'}</td>
+                              </tr>
                               ))}
                             </tbody>
                           </table>
