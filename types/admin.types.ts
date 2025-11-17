@@ -214,3 +214,37 @@ export interface NyscPaymentDetails {
     email?: string;
   };
 }
+
+export interface PaymentStatisticsSummary {
+  total_successful_amount: number;
+  total_successful_payments: number;
+  total_students_paid: number;
+  normal_fee_count: number;
+  normal_fee_amount: number;
+  late_fee_count: number;
+  late_fee_amount: number;
+  duplicate_students_count: number;
+  duplicate_payments_count: number;
+  duplicate_total_amount: number;
+  hidden_students_count: number;
+}
+
+export interface PaymentStatisticsDepartmentItem {
+  count: number;
+  students: number;
+  amount: number;
+}
+
+export interface PaymentStatisticsResponse {
+  success: boolean;
+  filters: {
+    dateStart?: string;
+    dateEnd?: string;
+    payment_method?: string;
+    department?: string;
+    amount_type?: 'standard' | 'late';
+    duplicates?: 'all' | 'only' | 'exclude';
+  };
+  summary: PaymentStatisticsSummary;
+  department_breakdown: Record<string, PaymentStatisticsDepartmentItem>;
+}

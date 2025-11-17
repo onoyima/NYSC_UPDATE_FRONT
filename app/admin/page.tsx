@@ -29,7 +29,7 @@ const AdminDashboard: React.FC = () => {
 
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  
+
   // Define authorized staff IDs
   const authorizedStaffIds = [596, 577, 1, 2, 506];
   const isAuthorizedStaff = admin ? authorizedStaffIds.includes(admin.id) : false;
@@ -85,8 +85,8 @@ const AdminDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen animate-fade-in">
-        <LoadingSpinner 
-          size="xl" 
+        <LoadingSpinner
+          size="xl"
           text="Loading admin dashboard..."
           className="animate-scale-in"
         />
@@ -107,10 +107,10 @@ const AdminDashboard: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Fixed Sidebar */}
         <Sidebar />
-        
+
         {/* Navbar */}
         <Navbar userType="admin" />
-        
+
         {/* Main Content */}
         <main className="ml-0 md:ml-64 overflow-y-auto h-screen pt-20 p-4 lg:p-6 transition-all duration-300">
             <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
@@ -175,7 +175,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </CardContent>
                   </Card>
-                  
+
                   {/* Enhanced basic dashboard data for unauthorized staff */}
                   {dashboardData && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -190,7 +190,7 @@ const AdminDashboard: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-xl text-white shadow-lg">
                         <div className="flex items-center justify-between">
                           <div>
@@ -202,7 +202,7 @@ const AdminDashboard: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 p-6 rounded-xl text-white shadow-lg">
                         <div className="flex items-center justify-between">
                           <div>
@@ -214,7 +214,7 @@ const AdminDashboard: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-xl text-white shadow-lg">
                         <div className="flex items-center justify-between">
                           <div>
@@ -236,9 +236,9 @@ const AdminDashboard: React.FC = () => {
                   {(userRole === 'admin' || userRole === 'super_admin') ? (
                     <AdminDashboardCards adminData={dashboardData} />
                   ) : (
-                    <LimitedDashboardCards 
-                      adminData={dashboardData} 
-                      userRole={userRole as 'sub_admin' | 'manager'} 
+                    <LimitedDashboardCards
+                      adminData={dashboardData}
+                      userRole={userRole as 'sub_admin' | 'manager'}
                     />
                   )}
                 </div>
@@ -290,8 +290,8 @@ const AdminDashboard: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           className="group p-6 h-auto border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200"
                           onClick={() => window.location.href = '/admin/students'}
                         >
@@ -308,9 +308,9 @@ const AdminDashboard: React.FC = () => {
                             </div>
                           </div>
                         </Button>
-                        
-                        <Button 
-                          variant="outline" 
+
+                        <Button
+                          variant="outline"
                           className="group p-6 h-auto border border-gray-200 rounded-xl hover:border-green-300 hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200"
                           onClick={() => window.location.href = '/admin/exports'}
                         >
@@ -327,9 +327,9 @@ const AdminDashboard: React.FC = () => {
                             </div>
                           </div>
                         </Button>
-                        
-                        <Button 
-                          variant="outline" 
+
+                        <Button
+                          variant="outline"
                           className="group p-6 h-auto border border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200"
                           onClick={() => window.location.href = '/admin/settings'}
                         >
@@ -346,9 +346,9 @@ const AdminDashboard: React.FC = () => {
                             </div>
                           </div>
                         </Button>
-                        
-                        <Button 
-                          variant="outline" 
+
+                        <Button
+                          variant="outline"
                           className="group p-6 h-auto border border-gray-200 rounded-xl hover:border-orange-300 hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200"
                           onClick={() => window.location.href = '/admin/payments'}
                         >
@@ -365,9 +365,9 @@ const AdminDashboard: React.FC = () => {
                             </div>
                           </div>
                         </Button>
-                        
-                        <Button 
-                          variant="outline" 
+
+                        <Button
+                          variant="outline"
                           className="group p-6 h-auto border border-gray-200 rounded-xl hover:border-teal-300 hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-teal-50 to-teal-100 hover:from-teal-100 hover:to-teal-200"
                           onClick={() => window.location.href = '/admin/submissions'}
                         >
@@ -384,9 +384,9 @@ const AdminDashboard: React.FC = () => {
                             </div>
                           </div>
                         </Button>
-                        
-                        <Button 
-                          variant="outline" 
+
+                        <Button
+                          variant="outline"
                           className="group p-6 h-auto border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer bg-gradient-to-br from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200"
                           onClick={() => window.location.href = '/admin/roles'}
                         >
@@ -562,8 +562,8 @@ const AdminDashboard: React.FC = () => {
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={dashboardData?.departmentBreakdown?.slice(0, 8) || []}>
                               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                              <XAxis 
-                                dataKey="department" 
+                              <XAxis
+                                dataKey="department"
                                 className="text-xs"
                                 angle={-45}
                                 textAnchor="end"
@@ -571,9 +571,9 @@ const AdminDashboard: React.FC = () => {
                               />
                               <YAxis className="text-xs" />
                               <ChartTooltip content={<ChartTooltipContent />} />
-                              <Bar 
-                                dataKey="count" 
-                                fill="#3b82f6" 
+                              <Bar
+                                dataKey="count"
+                                fill="#3b82f6"
                                 radius={[4, 4, 0, 0]}
                                 className="fill-primary"
                               />
@@ -721,9 +721,9 @@ const AdminDashboard: React.FC = () => {
               )}
             </div>
           </main>
-      
+
       {/* WhatsApp Icon */}
-      
+
       </div>
     </ProtectedRoute>
   );

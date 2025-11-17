@@ -211,7 +211,7 @@ const PendingPaymentsClient: React.FC = () => {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Link href={`/admin/payments/${payment.id}`}>
+                            <Link href={`/admin/payments/details/${payment.id}`}>
                               <Button variant="ghost" size="sm">
                                 <EyeIcon className="h-4 w-4 mr-1" />
                                 View

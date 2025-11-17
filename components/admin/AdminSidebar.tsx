@@ -31,7 +31,7 @@ interface NavItem {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
-  const { hasPermission, userRole } = useAuth();
+  const { hasPermission, userRole, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -58,6 +58,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
       name: 'Payment Management',
       href: '/admin/payments',
       icon: CreditCardIcon,
+      permission: 'canViewPayments'
+    },
+    {
+      name: 'Payment Statistics',
+      href: '/admin/payment-statistics',
+      icon: ChartBarIcon,
       permission: 'canViewPayments'
     },
     {
@@ -109,6 +115,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
   
   // Filter items based on permissions
   const filteredItems = navigationItems.filter(item => {
+    const email = String((user as any)?.email || (user as any)?.p_email || '').toLowerCase();
+    if (item.href === '/admin/payment-statistics') {
+      return email === 'onoyimab@veritas.edu.ng' || email === 'agbudug@veritas.edu.ng';
+    }
     if (!item.permission) return true;
     const hasAccess = hasPermission(item.permission as any);
     console.log(`Item: ${item.name}, Permission: ${item.permission}, Has Access: ${hasAccess}`);

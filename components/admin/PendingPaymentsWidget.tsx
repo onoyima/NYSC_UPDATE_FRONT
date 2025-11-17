@@ -16,6 +16,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
+import adminService from '@/services/admin.service';
 
 interface PendingPayment {
   id: number;
@@ -49,24 +50,12 @@ const PendingPaymentsWidget: React.FC<PendingPaymentsWidgetProps> = ({ className
 
   const fetchPendingStats = async () => {
     try {
-      const response = await fetch('/api/nysc/admin/payments/pending-stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch pending payments stats');
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
+      const data = await adminService.getPendingPaymentsStats();
+      if (data?.success) {
         setStats(data.stats);
-        setRecentPending(data.recent_pending);
+        setRecentPending(data.recent_pending || []);
       } else {
-        throw new Error(data.message || 'Failed to fetch stats');
+        throw new Error(data?.message || 'Failed to fetch stats');
       }
     } catch (error) {
       console.error('Error fetching pending payments stats:', error);
@@ -79,37 +68,15 @@ const PendingPaymentsWidget: React.FC<PendingPaymentsWidgetProps> = ({ className
   const verifyPendingPayments = async () => {
     try {
       setIsVerifying(true);
-      
-      const response = await fetch('/api/nysc/admin/payments/verify-pending', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          force: false,
-          limit: 50
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to verify pending payments');
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
+      const data = await adminService.verifyPendingPayments({ force: false, limit: 50 });
+      if (data?.success) {
         toast.success(data.message);
-        
         if (data.stats) {
           toast.info(`Verified ${data.stats.verified} payments, ${data.stats.successful} successful, ${data.stats.failed} failed`);
         }
-        
-        // Refresh stats after verification
         setTimeout(fetchPendingStats, 2000);
       } else {
-        throw new Error(data.message || 'Verification failed');
+        throw new Error(data?.message || 'Verification failed');
       }
     } catch (error) {
       console.error('Error verifying pending payments:', error);
@@ -121,31 +88,15 @@ const PendingPaymentsWidget: React.FC<PendingPaymentsWidgetProps> = ({ className
 
   const verifySinglePayment = async (paymentId: number) => {
     try {
-      const response = await fetch(`/api/nysc/admin/payments/${paymentId}/verify`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to verify payment');
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
+      const data = await adminService.verifySinglePayment(paymentId);
+      if (data?.success) {
         toast.success(data.message);
-        
         if (data.new_status) {
           toast.info(`Payment status updated to: ${data.new_status}`);
         }
-        
-        // Refresh stats after verification
         fetchPendingStats();
       } else {
-        throw new Error(data.message || 'Verification failed');
+        throw new Error(data?.message || 'Verification failed');
       }
     } catch (error) {
       console.error('Error verifying single payment:', error);

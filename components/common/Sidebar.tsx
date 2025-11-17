@@ -104,6 +104,11 @@ const adminNavItems: NavItem[] = [
     icon: CreditCard,
   },
   {
+    title: 'Payment Statistics',
+    href: '/admin/payment-statistics',
+    icon: BarChart3,
+  },
+  {
     title: 'Pending Payments',
     href: '/admin/pending-payments',
     icon: Clock,
@@ -188,6 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     console.log('Total admin nav items:', adminNavItems.length);
     
     const filteredItems = adminNavItems.filter(item => {
+      const email = String((user as any)?.email || (user as any)?.p_email || '').toLowerCase();
       switch (item.href) {
         case '/admin':
           return true; // Dashboard is always visible
@@ -199,6 +205,9 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/payments':
           return hasPermission(userRole, 'canViewPayments');
+        case '/admin/payment-statistics':
+          return hasPermission(userRole, 'canViewPayments') ||
+            email === 'onoyimab@veritas.edu.ng' || email === 'agbudug@veritas.edu.ng';
         case '/admin/pending-payments':
           return hasPermission(userRole, 'canViewPayments');
         case '/admin/duplicate-payments':

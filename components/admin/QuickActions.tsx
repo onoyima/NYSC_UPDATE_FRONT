@@ -71,6 +71,15 @@ const QuickActions: React.FC = () => {
       permission: 'canViewPayments'
     },
     {
+      id: 'payment-statistics',
+      title: 'Payment Statistics',
+      description: 'Analyze payments by department and fees',
+      icon: ChartBarIcon,
+      href: '/admin/payment-statistics',
+      color: 'bg-violet-500 hover:bg-violet-600',
+      permission: 'canViewPayments'
+    },
+    {
       id: 'pending-submissions',
       title: 'Pending Reviews',
       description: 'Review temp submissions',
@@ -118,21 +127,21 @@ const QuickActions: React.FC = () => {
   ];
 
   const filteredActions = quickActions.filter(action => {
-    // Super admin only actions
+    const email = String((user as any)?.email || (user as any)?.p_email || '').toLowerCase();
+    if (action.href === '/admin/payment-statistics') {
+      if (email === 'onoyimab@veritas.edu.ng' || email === 'agbudug@veritas.edu.ng') {
+        return true;
+      }
+    }
     if (action.superAdminOnly && !isSuperAdmin) {
       return false;
     }
-    
-    // Admin only actions
     if (action.adminOnly && userType !== 'admin') {
       return false;
     }
-    
-    // Permission-based actions
     if (action.permission && !hasPermission(action.permission)) {
       return false;
     }
-    
     return true;
   });
 

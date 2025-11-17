@@ -543,7 +543,7 @@ const PaymentManagement: React.FC = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
                               <Link
-                                href={`/admin/payments/${payment.id}`}
+                                href={`/admin/payments/details/${payment.id}`}
                                 className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                 title="View Details"
                               >
