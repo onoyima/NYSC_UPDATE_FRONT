@@ -483,7 +483,7 @@ const StudentsListPage = () => {
                       </Badge>
                     </div>
                     <div className="text-sm text-blue-700 mt-1">
-                      Only students from "{courseStudyFilter}" will be exported.
+                      Only students from {courseStudyFilter} will be exported.
                       <button
                         onClick={() => setCourseStudyFilter("all")}
                         className="ml-1 underline hover:no-underline"
