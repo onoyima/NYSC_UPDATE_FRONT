@@ -211,7 +211,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         case '/admin/pending-payments':
           return hasPermission(userRole, 'canViewPayments');
         case '/admin/duplicate-payments':
-          return hasPermission(userRole, 'canViewPayments');
+          return user.id === 596;
         case '/admin/submissions':
           return hasPermission(userRole, 'canViewTempSubmissions');
         case '/admin/exports':

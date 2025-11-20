@@ -692,6 +692,15 @@ class AdminService {
     });
     return response.data;
   }
+
+  async exportUploadAnalysis(params: { file?: string; filter: 'uploaded' | 'not_uploaded' | 'uploaded_not_in_nysc'; format?: 'excel' | 'csv'; }): Promise<Blob> {
+    const response = await axiosInstance.get('/api/nysc/admin/upload-analysis/export', {
+      params: { file: params.file, filter: params.filter, format: params.format || 'excel' },
+      responseType: 'blob',
+      timeout: 60000
+    });
+    return response.data;
+  }
 }
 
 const adminService = new AdminService();

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Sidebar from "@/components/common/Sidebar";
@@ -159,26 +159,12 @@ const UploadAnalysisPage: React.FC = () => {
   >("overview");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
-  const [selectedFile, setSelectedFile] = useState<string>("uploaded.xlsx");
+  const [selectedFile, setSelectedFile] = useState<string>("uploaded_pcms.xlsx");
   const [availableFiles, setAvailableFiles] = useState<FileInfo[]>([]);
+  const [exportFilter, setExportFilter] = useState<ExportFilter>('uploaded');
+  const [exportFormat, setExportFormat] = useState<'excel' | 'csv'>('excel');
 
-  useEffect(() => {
-    const token = localStorage.getItem("nysc_token");
-    const storedUserType = localStorage.getItem("nysc_user_type");
-
-    if (!token || storedUserType !== "admin") {
-      router.push("/admin/login");
-      return;
-    }
-
-    setUserType(storedUserType);
-    setIsLoading(false);
-
-    // Load analysis data on component mount
-    loadAnalysisData();
-  }, [router]);
-
-  const loadAnalysisData = async (fileName?: string) => {
+  const loadAnalysisData = useCallback(async (fileName?: string) => {
     try {
       setIsAnalyzing(true);
       const fileToAnalyze = fileName || selectedFile;
@@ -193,25 +179,36 @@ const UploadAnalysisPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error loading analysis:", error);
-      
       let errorMessage = "Failed to load upload analysis";
-      
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
-      // Show debug info if available
       if (error.response?.data?.debug_info) {
         console.log("Debug info:", error.response.data.debug_info);
       }
-      
       toast.error(errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [selectedFile]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("nysc_token");
+    const storedUserType = localStorage.getItem("nysc_user_type");
+
+    if (!token || storedUserType !== "admin") {
+      router.push("/admin/login");
+      return;
+    }
+
+    setUserType(storedUserType);
+    setIsLoading(false);
+
+    loadAnalysisData();
+  }, [router, loadAnalysisData]);
+
 
   const handleRefreshAnalysis = () => {
     setCurrentPage(1); // Reset to first page
@@ -225,55 +222,21 @@ const UploadAnalysisPage: React.FC = () => {
     loadAnalysisData(fileName);
   };
 
-  const handleExportUnuploaded = async () => {
+  const handleExport = async () => {
     try {
       setIsExporting(true);
-      const result = await adminService.exportUnuploadedStudents();
-
-      if (result.success) {
-        // Create and download CSV
-        const csvContent = [
-          [
-            "Student ID",
-            "Matric No",
-            "First Name",
-            "Last Name",
-            "Course of Study",
-            "Phone",
-            "Email",
-          ],
-          ...result.data.map((student: any) => [
-            student.student_id,
-            student.matric_no,
-            student.fname,
-            student.lname,
-            student.course_study,
-            student.phone || "",
-            student.email || "",
-          ]),
-        ]
-          .map((row) => row.join(","))
-          .join("\n");
-
-        const blob = new Blob([csvContent], { type: "text/csv" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `unuploaded_students_${
-          new Date().toISOString().split("T")[0]
-        }.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-
-        toast.success(`Exported ${result.count} unuploaded students`);
-      } else {
-        toast.error(result.message || "Failed to export unuploaded students");
-      }
-    } catch (error) {
-      console.error("Error exporting unuploaded students:", error);
-      toast.error("Failed to export unuploaded students");
+      const blob = await adminService.exportUploadAnalysis({ file: selectedFile, filter: exportFilter, format: exportFormat });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `upload_analysis_${exportFilter}_${new Date().toISOString().split("T")[0]}.${exportFormat === 'excel' ? 'xlsx' : 'csv'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Download started");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to export");
     } finally {
       setIsExporting(false);
     }
@@ -391,7 +354,7 @@ const UploadAnalysisPage: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                     NYSC SALBAM Upload Analysis
@@ -435,7 +398,7 @@ const UploadAnalysisPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     onClick={handleRefreshAnalysis}
                     disabled={isAnalyzing}
@@ -451,15 +414,29 @@ const UploadAnalysisPage: React.FC = () => {
                   </Button>
 
                   {analysisData && (
-                    <Button
-                      onClick={handleExportUnuploaded}
-                      disabled={isExporting}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      {isExporting ? "Exporting..." : "Export Unuploaded"}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={exportFilter}
+                        onChange={(e) => setExportFilter(e.target.value as any)}
+                        className="border rounded px-2 py-1 text-sm"
+                      >
+                        <option value="uploaded">Uploaded</option>
+                        <option value="not_uploaded">Not Uploaded</option>
+                        <option value="uploaded_not_in_nysc">Uploaded Not In NYSC</option>
+                      </select>
+                      <select
+                        value={exportFormat}
+                        onChange={(e) => setExportFormat(e.target.value as any)}
+                        className="border rounded px-2 py-1 text-sm"
+                      >
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                      </select>
+                      <Button onClick={handleExport} disabled={isExporting} variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        {isExporting ? "Exporting..." : "Download"}
+                      </Button>
+                    </div>
                   )}
                   
                   <Button
@@ -891,7 +868,7 @@ const UploadAnalysisPage: React.FC = () => {
                             This analysis compares student IDs extracted from
                             matric numbers in uploaded.xlsx (pattern: /XXXX)
                             with the student_nysc database. Students are
-                            considered "uploaded" if their student_id appears in
+                            considered uploaded if their student_id appears in
                             both the Excel file and the database.
                           </AlertDescription>
                         </Alert>
@@ -940,7 +917,8 @@ const UploadAnalysisPage: React.FC = () => {
                           {analysisData.all_data.matched.length.toLocaleString()}{" "}
                           total)
                         </h4>
-                        <Table>
+                        <div className="overflow-x-auto">
+                          <Table>
                           <TableHeader>
                             <TableRow>
                               <TableHead>Student ID</TableHead>
@@ -974,7 +952,8 @@ const UploadAnalysisPage: React.FC = () => {
                               );
                             })()}
                           </TableBody>
-                        </Table>
+                          </Table>
+                        </div>
                         <PaginationControls
                           totalPages={
                             getPaginatedData(
@@ -997,16 +976,32 @@ const UploadAnalysisPage: React.FC = () => {
                             {analysisData.all_data.unuploaded.length.toLocaleString()}{" "}
                             total)
                           </h4>
-                          <Button
-                            onClick={handleExportUnuploaded}
-                            disabled={isExporting}
-                            size="sm"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            {isExporting ? "Exporting..." : "Export All"}
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={exportFilter}
+                              onChange={(e) => setExportFilter(e.target.value as any)}
+                              className="border rounded px-2 py-1 text-sm"
+                            >
+                              <option value="uploaded">Uploaded</option>
+                              <option value="not_uploaded">Not Uploaded</option>
+                              <option value="uploaded_not_in_nysc">Uploaded Not In NYSC</option>
+                            </select>
+                            <select
+                              value={exportFormat}
+                              onChange={(e) => setExportFormat(e.target.value as any)}
+                              className="border rounded px-2 py-1 text-sm"
+                            >
+                              <option value="excel">Excel</option>
+                              <option value="csv">CSV</option>
+                            </select>
+                            <Button onClick={handleExport} disabled={isExporting} size="sm">
+                              <Download className="h-4 w-4 mr-2" />
+                              {isExporting ? "Exporting..." : "Download"}
+                            </Button>
+                          </div>
                         </div>
-                        <Table>
+                        <div className="overflow-x-auto">
+                          <Table>
                           <TableHeader>
                             <TableRow>
                               <TableHead>Student ID</TableHead>
@@ -1040,7 +1035,8 @@ const UploadAnalysisPage: React.FC = () => {
                               );
                             })()}
                           </TableBody>
-                        </Table>
+                          </Table>
+                        </div>
                         <PaginationControls
                           totalPages={
                             getPaginatedData(
@@ -1063,10 +1059,11 @@ const UploadAnalysisPage: React.FC = () => {
                           {analysisData.all_data.uploaded_but_not_in_nysc.length.toLocaleString()}{" "}
                           total)
                         </h4>
-                        <Table>
+                        <div className="overflow-x-auto">
+                          <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Student ID</TableHead>
+                              <TableHead>Value</TableHead>
                               <TableHead>Note</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -1080,7 +1077,7 @@ const UploadAnalysisPage: React.FC = () => {
                               return paginatedData.data.map((item, index) => (
                                 <TableRow key={index}>
                                   <TableCell className="font-mono">
-                                    {item.student_id}
+                                    {(item as any).value ?? (item as any).student_id}
                                   </TableCell>
                                   <TableCell className="text-orange-600">
                                     {item.note}
@@ -1089,7 +1086,8 @@ const UploadAnalysisPage: React.FC = () => {
                               ));
                             })()}
                           </TableBody>
-                        </Table>
+                          </Table>
+                        </div>
                         <PaginationControls
                           totalPages={
                             getPaginatedData(
@@ -1427,3 +1425,4 @@ const UploadAnalysisPage: React.FC = () => {
 };
 
 export default UploadAnalysisPage;
+type ExportFilter = 'uploaded' | 'not_uploaded' | 'uploaded_not_in_nysc';

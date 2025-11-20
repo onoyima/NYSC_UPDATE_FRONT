@@ -104,6 +104,14 @@ const GraduandsReviewPage = () => {
       const fileToProcess = fileName || selectedFile;
       const result = await adminService.getGraduandsMatches(fileToProcess);
 
+      if (!result.success) {
+        setMatchData(result);
+        const msg = result.message || `Failed to process ${fileToProcess}`;
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+
       setMatchData(result);
 
       // Initialize approvals state
