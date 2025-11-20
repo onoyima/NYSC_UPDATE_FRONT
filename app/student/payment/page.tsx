@@ -178,7 +178,7 @@ const PaymentPage: React.FC = () => {
           <Navbar />
           <Sidebar />
           <div className="flex">
-            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 pt-20 min-h-screen">
+            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 pt-28 md:pt-32 pb-24 min-h-screen">
               <div className="max-w-2xl mx-auto">
                 <Card>
                   <CardHeader>
@@ -230,7 +230,7 @@ const PaymentPage: React.FC = () => {
           <Navbar />
           <Sidebar />
           <div className="flex">
-            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 overflow-y-auto h-screen pt-20">
+            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 overflow-y-auto h-screen pt-28 md:pt-32 pb-24">
               <div className="max-w-2xl mx-auto">
                 <Card>
                   <CardHeader>
@@ -263,7 +263,7 @@ const PaymentPage: React.FC = () => {
           <Navbar />
           <div className="flex">
             <Sidebar />
-            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6">
+            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 pt-28 md:pt-32 pb-24">
               <div className="max-w-2xl mx-auto">
                 <Card>
                   <CardHeader>
@@ -334,7 +334,7 @@ const PaymentPage: React.FC = () => {
         <Navbar />
         <Sidebar />
         <div className="flex">
-          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 overflow-y-auto h-screen pt-20">
+            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 overflow-y-auto h-screen pt-28 md:pt-32 pb-24">
             <div className="max-w-2xl mx-auto space-y-4 md:space-y-6">
               {/* Header */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -433,7 +433,7 @@ const PaymentPage: React.FC = () => {
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Important:</strong> After clicking "Pay Now", you will be redirected to Paystack's secure payment page.
+                      <strong>Important:</strong> After clicking &quot;Pay Now&quot;, you will be redirected to Paystack&apos;s secure payment page.
                       Do not close your browser until the payment is completed.
                     </AlertDescription>
                   </Alert>

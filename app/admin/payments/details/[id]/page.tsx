@@ -75,7 +75,7 @@ const PaymentDetailsPage: React.FC = () => {
         <Sidebar />
         <Navbar userType="admin" />
 
-        <main className="ml-0 md:ml-64 pt-16 p-4 md:p-6">
+        <main className="ml-0 md:ml-64 pt-28 md:pt-32 pb-24 p-4 md:p-8 min-h-screen">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Payment Details</h1>
             {loadingData ? (

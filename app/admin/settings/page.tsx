@@ -293,7 +293,7 @@ const AdminSettingsPage: React.FC = () => {
         <Navbar userType="admin" />
 
         {/* Main Content */}
-        <main className="ml-0 md:ml-64 overflow-y-auto h-screen pt-20 p-4 md:p-6">
+        <main className="ml-0 md:ml-64 overflow-y-auto h-screen pt-28 md:pt-32 pb-24 p-4 md:p-8">
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Header */}
               <div className="flex items-center justify-between">

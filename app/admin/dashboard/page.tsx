@@ -78,7 +78,7 @@ const AdminDashboard = () => {
         <Sidebar />
         <Navbar userType="admin" />
         
-        <main className="ml-0 md:ml-64 pt-20 p-4 md:p-6 min-h-screen">
+        <main className="ml-0 md:ml-64 pt-28 md:pt-32 pb-24 p-4 md:p-8 min-h-screen">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">

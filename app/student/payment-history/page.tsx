@@ -112,7 +112,7 @@ const PaymentHistoryPage: React.FC = () => {
           <Navbar />
           <Sidebar />
           <div className="flex">
-            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 overflow-y-auto h-screen pt-20">
+            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 overflow-y-auto h-screen pt-28 md:pt-32 pb-24">
               <div className="flex items-center justify-center py-16">
                 <LoadingSpinner 
                   size="xl" 
@@ -133,7 +133,7 @@ const PaymentHistoryPage: React.FC = () => {
         <Navbar />
         <Sidebar />
         <div className="flex">
-          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 overflow-y-auto h-screen pt-20">
+          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 overflow-y-auto h-screen pt-28 md:pt-32 pb-24">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="mb-6 sm:mb-8">
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">Payment History</h1>

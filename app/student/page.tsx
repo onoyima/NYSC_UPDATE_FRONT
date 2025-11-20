@@ -125,7 +125,7 @@ const StudentDashboard: React.FC = () => {
         <Navbar />
         <Sidebar />
         <div className="flex">
-          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 pt-20 md:pt-24 min-h-screen">
+          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 pt-28 md:pt-32 pb-24 min-h-screen">
             <div className="space-y-6 animate-fade-in">
               {/* Header */}
               <div className="flex flex-col space-y-2 animate-fade-in-up">

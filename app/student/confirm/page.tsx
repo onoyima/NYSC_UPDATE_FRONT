@@ -189,7 +189,7 @@ const DataConfirmationPage: React.FC = () => {
         <Navbar />
         <Sidebar />
         <div className="flex">
-          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 pt-20 min-h-screen">
+          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 pt-28 md:pt-32 pb-24 min-h-screen">
             <div className="max-w-4xl mx-auto space-y-6 pb-8">
               {/* Header */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

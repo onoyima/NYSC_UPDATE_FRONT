@@ -421,7 +421,7 @@ const StudentsManagementPage: React.FC = () => {
         <Navbar userType="admin" />
         
         {/* Main Content */}
-        <main className="ml-0 md:ml-64 pt-16 p-4 md:p-6 min-h-screen">
+        <main className="ml-0 md:ml-64 pt-28 md:pt-32 pb-24 p-4 md:p-8 min-h-screen">
             <div className="max-w-7xl mx-auto space-y-6">
               {/* Header */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

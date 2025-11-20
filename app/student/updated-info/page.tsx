@@ -98,7 +98,7 @@ const UpdatedInfoPage: React.FC = () => {
           <Navbar />
           <Sidebar />
           <div className="flex">
-            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 pt-20 min-h-screen flex items-center justify-center">
+            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 pt-28 md:pt-32 pb-24 min-h-screen flex items-center justify-center">
               <LoadingSpinner 
                 size="xl" 
                 text="Loading student information..."
@@ -118,7 +118,7 @@ const UpdatedInfoPage: React.FC = () => {
           <Navbar />
           <Sidebar />
           <div className="flex">
-            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 overflow-y-auto h-screen pt-20">
+            <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 overflow-y-auto h-screen pt-28 md:pt-32 pb-24">
               <div className="max-w-4xl mx-auto px-2 sm:px-0">
                 <div className="mb-6">
                   <Link href="/student">
@@ -139,7 +139,7 @@ const UpdatedInfoPage: React.FC = () => {
                       <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No Submitted Data Found</h3>
                       <p className="text-muted-foreground mb-4">
-                        You haven't submitted your student details update data yet.
+                        You haven&apos;t submitted your student details update data yet.
                       </p>
                       <Link href="/student/confirm">
                         <Button>
@@ -163,7 +163,7 @@ const UpdatedInfoPage: React.FC = () => {
         <Navbar />
         <Sidebar />
         <div className="flex">
-          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 overflow-y-auto h-screen pt-20">
+          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 overflow-y-auto h-screen pt-28 md:pt-32 pb-24">
             <div className="max-w-4xl mx-auto px-2 sm:px-0">
               <div className="mb-6">
                 <Link href="/student">
