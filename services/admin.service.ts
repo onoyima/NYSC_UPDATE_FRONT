@@ -586,6 +586,17 @@ class AdminService {
     return response.data;
   }
 
+  async enforceDegreesFromDocx(fileName?: string, options?: { dry_run?: boolean }, operations?: Array<{ student_id: number; matric_no: string; action: 'update' | 'nullify'; value?: string }>) {
+    const params: any = fileName ? { file: fileName } : {};
+    if (options?.dry_run) params.dry_run = true;
+    const body: any = operations && operations.length > 0 ? { operations } : {};
+    const response = await axiosInstance.post('/api/nysc/admin/docx-import/enforce-degrees', body, {
+      params,
+      timeout: 120000
+    });
+    return response.data;
+  }
+
   async getDataAnalysis() {
     const response = await axiosInstance.get('/api/nysc/admin/docx-import/data-analysis', {
       timeout: 120000 // 2 minutes timeout for comprehensive analysis

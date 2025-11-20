@@ -74,6 +74,11 @@ const GraduandsReviewPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [approvals, setApprovals] = useState<Record<string, boolean>>({});
   const [selectedFile, setSelectedFile] = useState<string>("GRADUANDS.docx");
+  const [showEnforceConfirm, setShowEnforceConfirm] = useState(false);
+  const [enforceStats, setEnforceStats] = useState<{ scanned?: number; kept_ok?: number; nullified_not_in_docx?: number; nullified_mismatch?: number; already_null?: number } | null>(null);
+  const [isEnforcePreviewing, setIsEnforcePreviewing] = useState(false);
+  const [enforceDetails, setEnforceDetails] = useState<{ not_in_docx?: any[]; updated_to_docx?: any[] } | null>(null);
+  const [selectedActions, setSelectedActions] = useState<Record<string, { selected: boolean; action: 'update' | 'nullify'; value?: string }>>({});
 
   useEffect(() => {
     if (!isLoading) {
@@ -182,13 +187,20 @@ const GraduandsReviewPage = () => {
     try {
       setIsApplying(true);
 
-      // Prepare update data
-      const updates = matchData.matches.map((item) => ({
-        student_id: item.student_id,
-        matric_no: item.matric_no,
-        proposed_class_of_degree: item.proposed_class_of_degree,
-        approved: approvals[item.matric_no] || false,
-      }));
+      // Prepare update data (include approved records even if the DOCX degree is empty)
+      const updates = matchData.matches
+        .filter((item) => approvals[item.matric_no] === true)
+        .map((item) => ({
+          student_id: item.student_id,
+          matric_no: item.matric_no,
+          proposed_class_of_degree: item.proposed_class_of_degree ?? null,
+          approved: true,
+        }));
+
+      if (updates.length === 0) {
+        toast.error('No approved records selected. Please approve rows to update.');
+        return;
+      }
 
       const result = await adminService.applyGraduandsUpdates(updates);
 
@@ -237,7 +249,7 @@ const GraduandsReviewPage = () => {
         <Sidebar />
         <Navbar userType="admin" />
 
-        <main className="ml-0 md:ml-64 pt-20 p-4 md:p-6 min-h-screen">
+        <main className="ml-0 md:ml-64 pt-28 md:pt-32 pb-24 p-4 md:p-8 min-h-screen">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
@@ -253,6 +265,35 @@ const GraduandsReviewPage = () => {
                 </div>
 
                 <div className="flex gap-2">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        setIsEnforcePreviewing(true);
+                        const fileToProcess = selectedFile;
+                        toast.info(`Previewing enforcement for ${fileToProcess}...`);
+                        const result = await adminService.enforceDegreesFromDocx(fileToProcess, { dry_run: true });
+                        if (result.success) {
+                          setEnforceStats(result.stats || {});
+                          setEnforceDetails(result.details || {});
+                          setShowEnforceConfirm(true);
+                          toast.success('Preview ready');
+                        } else {
+                          toast.error(result.message || 'Preview failed');
+                        }
+                      } catch (error) {
+                        toast.error(
+                          error instanceof Error ? error.message : 'Failed to preview enforcement'
+                        );
+                      } finally {
+                        setIsEnforcePreviewing(false);
+                      }
+                    }}
+                    variant="destructive"
+                    size="sm"
+                    disabled={isLoadingData || isProcessing || isEnforcePreviewing}
+                  >
+                    Preview Enforcement
+                  </Button>
                   <Button
                     onClick={async () => {
                       try {
@@ -522,6 +563,157 @@ const GraduandsReviewPage = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {showEnforceConfirm && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        Confirm Enforcement
+                      </CardTitle>
+                      <CardDescription>
+                        Includes exact and similar matric matches (by final number). Values not tied to the file will be nullified; mismatches will be updated to match the file.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Scanned</p>
+                          <p className="text-lg font-semibold">{enforceStats?.scanned ?? 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Kept OK</p>
+                          <p className="text-lg font-semibold text-green-700">{enforceStats?.kept_ok ?? 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Nullify (not in DOCX)</p>
+                          <p className="text-lg font-semibold text-red-700">{enforceStats?.nullified_not_in_docx ?? 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Update To DOCX</p>
+                          <p className="text-lg font-semibold text-indigo-700">{enforceStats?.updated_to_docx ?? 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Already NULL</p>
+                          <p className="text-lg font-semibold">{enforceStats?.already_null ?? 0}</p>
+                        </div>
+                      </div>
+                      <div className="mt-6">
+                        <h4 className="text-sm font-semibold mb-2">Preview (first 100)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm font-medium text-red-700">Not In DOCX ({enforceDetails?.not_in_docx?.length || 0})</p>
+                            <div className="max-h-64 overflow-y-auto border rounded p-2 bg-red-50">
+                              {(enforceDetails?.not_in_docx || []).slice(0, 100).map((r, i) => (
+                                <div key={`nid-${i}`} className="text-xs py-1 border-b flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!selectedActions[`nid-${r.student_id}`]?.selected}
+                                    onChange={(e) => {
+                                      setSelectedActions((prev) => ({
+                                        ...prev,
+                                        [`nid-${r.student_id}`]: { selected: e.target.checked, action: 'nullify' }
+                                      }))
+                                    }}
+                                  />
+                                  <span className="font-mono">{r.matric_no}</span> — {r.name} — <span className="px-2 py-0.5 rounded bg-red-100 text-red-800">{r.current_class_of_degree}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-indigo-700">Updated To DOCX ({enforceDetails?.updated_to_docx?.length || 0})</p>
+                            <div className="max-h-64 overflow-y-auto border rounded p-2 bg-indigo-50">
+                              {(enforceDetails?.updated_to_docx || []).slice(0, 100).map((r, i) => {
+                                const key = `upd-${r.student_id}`;
+                                const act = selectedActions[key]?.action || 'update';
+                                return (
+                                  <div key={key} className="text-xs py-1 border-b flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!selectedActions[key]?.selected}
+                                      onChange={(e) => {
+                                        setSelectedActions((prev) => ({
+                                          ...prev,
+                                          [key]: { selected: e.target.checked, action: prev[key]?.action || 'update', value: r.docx_class_of_degree }
+                                        }))
+                                      }}
+                                    />
+                                    <button
+                                      className={`px-2 py-0.5 rounded ${act === 'update' ? 'bg-indigo-100 text-indigo-800' : 'bg-red-100 text-red-800'}`}
+                                      onClick={() => {
+                                        setSelectedActions((prev) => ({
+                                          ...prev,
+                                          [key]: { selected: prev[key]?.selected || false, action: act === 'update' ? 'nullify' : 'update', value: r.docx_class_of_degree }
+                                        }))
+                                      }}
+                                    >
+                                      {act === 'update' ? 'Update' : 'Nullify'}
+                                    </button>
+                                    <span className="font-mono">{r.matric_no}</span> — {r.name} — DB: <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-800">{r.current_class_of_degree}</span> → DOCX: <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">{r.docx_class_of_degree}</span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-6">
+                        <Button
+                          onClick={async () => {
+                            try {
+                              setIsProcessing(true);
+                              const fileToProcess = selectedFile;
+                              const ops: any[] = [];
+                              (enforceDetails?.not_in_docx || []).forEach((r: any) => {
+                                const k = `nid-${r.student_id}`;
+                                if (selectedActions[k]?.selected) {
+                                  ops.push({ student_id: r.student_id, matric_no: r.matric_no, action: 'nullify' });
+                                }
+                              });
+                              (enforceDetails?.updated_to_docx || []).forEach((r: any) => {
+                                const k = `upd-${r.student_id}`;
+                                if (selectedActions[k]?.selected) {
+                                  ops.push({ student_id: r.student_id, matric_no: r.matric_no, action: selectedActions[k].action, value: r.docx_class_of_degree });
+                                }
+                              });
+                              const result = await adminService.enforceDegreesFromDocx(fileToProcess, undefined, ops);
+                              if (result.success) {
+                                const s = result.stats || {};
+                                toast.success(
+                                  `Enforcement done. Kept: ${s.kept_ok || 0}, Nullified (not in docx): ${s.nullified_not_in_docx || 0}, Updated to DOCX: ${s.updated_to_docx || 0}`
+                                );
+                                setShowEnforceConfirm(false);
+                                setEnforceStats(null);
+                                await fetchMatches(selectedFile);
+                              } else {
+                                toast.error(result.message || 'Enforcement failed');
+                              }
+                            } catch (error) {
+                              toast.error(
+                                error instanceof Error ? error.message : 'Failed to enforce degrees'
+                              );
+                            } finally {
+                              setIsProcessing(false);
+                            }
+                          }}
+                        >
+                          Apply Selected Actions
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowEnforceConfirm(false);
+                            setEnforceStats(null);
+                            setSelectedActions({});
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Unmatched Records Section */}
                 {matchData.unmatched && matchData.unmatched.length > 0 && (
