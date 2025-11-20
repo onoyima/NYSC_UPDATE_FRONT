@@ -75,7 +75,7 @@ const GraduandsReviewPage = () => {
   const [approvals, setApprovals] = useState<Record<string, boolean>>({});
   const [selectedFile, setSelectedFile] = useState<string>("GRADUANDS.docx");
   const [showEnforceConfirm, setShowEnforceConfirm] = useState(false);
-  const [enforceStats, setEnforceStats] = useState<{ scanned?: number; kept_ok?: number; nullified_not_in_docx?: number; nullified_mismatch?: number; already_null?: number } | null>(null);
+  const [enforceStats, setEnforceStats] = useState<{ scanned?: number; kept_ok?: number; nullified_not_in_docx?: number; nullified_mismatch?: number; updated_to_docx?: number; already_null?: number } | null>(null);
   const [isEnforcePreviewing, setIsEnforcePreviewing] = useState(false);
   const [enforceDetails, setEnforceDetails] = useState<{ not_in_docx?: any[]; updated_to_docx?: any[] } | null>(null);
   const [selectedActions, setSelectedActions] = useState<Record<string, { selected: boolean; action: 'update' | 'nullify'; value?: string }>>({});
