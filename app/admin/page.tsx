@@ -115,7 +115,7 @@ const AdminDashboard: React.FC = () => {
         <main className="ml-0 md:ml-64 overflow-y-auto h-screen pt-28 md:pt-32 pb-24 p-4 md:p-8 transition-all duration-300">
             <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
               {/* Enhanced Header */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-background rounded-xl border p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
@@ -247,7 +247,7 @@ const AdminDashboard: React.FC = () => {
               {/* Enhanced Tabbed Content - Only show for authorized staff */}
               {isAuthorizedStaff && (
               <Tabs defaultValue="overview" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                <TabsList className="grid w-full grid-cols-4 bg-background rounded-xl border">
                   <TabsTrigger value="overview" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
                     Overview

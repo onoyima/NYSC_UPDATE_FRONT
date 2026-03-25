@@ -154,9 +154,8 @@ const DataConfirmationPage: React.FC = () => {
       // Store the form data temporarily in localStorage for use after payment
       localStorage.setItem('nysc_form_data', JSON.stringify(formData));
 
-      // Store the session_id from the response for payment initiation
-      if (response.data && response.data.session_id) {
-        localStorage.setItem('nysc_session_id', response.data.session_id);
+      if (response.data && response.data.submission_token) {
+        localStorage.setItem('nysc_submission_token', response.data.submission_token);
       }
 
       // Redirect to payment page

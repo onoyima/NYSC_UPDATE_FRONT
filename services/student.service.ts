@@ -81,11 +81,9 @@ class StudentService {
 
   // Payment methods
   async initiatePayment() {
-    // Get session_id from localStorage
-    const sessionId = localStorage.getItem('nysc_session_id');
-    
+    const submissionToken = localStorage.getItem('nysc_submission_token');
     const response = await axiosInstance.post('/api/nysc/payment', {
-      session_id: sessionId
+      submission_token: submissionToken
     });
     return response;
   }

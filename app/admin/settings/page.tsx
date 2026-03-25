@@ -58,6 +58,9 @@ const AdminSettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('payment');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<number | undefined>(undefined);
+  const [newSession, setNewSession] = useState<{ name: string; code?: string; start_at?: string; end_at?: string; activate?: boolean }>({ name: '', code: '', start_at: '', end_at: '', activate: false });
 
   useEffect(() => {
     fetchSettings();
@@ -65,12 +68,15 @@ const AdminSettingsPage: React.FC = () => {
 
   const fetchSettings = async () => {
     try {
-      const [systemResponse, paymentResponse] = await Promise.all([
+      const [systemResponse, paymentResponse, sessionsResponse] = await Promise.all([
         adminService.getSystemSettings(),
-        adminSettingsService.getSettings()
+        adminSettingsService.getSettings(),
+        adminService.getSessions()
       ]);
       setMaintenanceSettings({ maintenance_mode: systemResponse.data?.maintenance_mode || false });
       setPaymentSettings(paymentResponse);
+      setSessions(sessionsResponse.sessions || []);
+      setActiveSessionId(sessionsResponse.active_session_id);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to fetch settings');
     } finally {
@@ -313,9 +319,10 @@ const AdminSettingsPage: React.FC = () => {
 
               {/* Settings Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="payment">Payment</TabsTrigger>
                   <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+                  <TabsTrigger value="sessions">Sessions</TabsTrigger>
                 </TabsList>
 
 
@@ -560,6 +567,126 @@ const AdminSettingsPage: React.FC = () => {
                           </>
                         )}
                       </Button>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                {/* Sessions Management */}
+                <TabsContent value="sessions" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5" />
+                        Sessions
+                      </CardTitle>
+                      <CardDescription>
+                        Create and activate sessions to scope student actions and analytics.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Active Session</h3>
+                        <div className="text-sm">{activeSessionId ? `Active Session ID: ${activeSessionId}` : 'No active session'}</div>
+                      </div>
+                      <Separator />
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">View Session Switcher</h3>
+                        <p className="text-sm text-muted-foreground">Select a session to view admin data (students, payments, exports) without changing the active session.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="view_session">Session</Label>
+                            <select
+                              id="view_session"
+                              className="border rounded px-3 py-2"
+                              value={typeof window !== 'undefined' ? (localStorage.getItem('admin_selected_session_id') || '') : ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (typeof window !== 'undefined') {
+                                  if (val) {
+                                    localStorage.setItem('admin_selected_session_id', val);
+                                  } else {
+                                    localStorage.removeItem('admin_selected_session_id');
+                                  }
+                                }
+                                toast.success(val ? `Switched view to session ${val}` : 'Cleared view session');
+                              }}
+                            >
+                              <option value="">Default (Active Session)</option>
+                              {sessions.map((s) => (
+                                <option key={s.id} value={s.id}>{s.name} (ID: {s.id}){s.is_active ? ' • Active' : ''}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Actions</Label>
+                            <div className="flex gap-2">
+                              <Button variant="outline" onClick={() => {
+                                if (typeof window !== 'undefined') {
+                                  localStorage.removeItem('admin_selected_session_id');
+                                }
+                                toast.success('View session cleared. Using active session.');
+                              }}>Reset</Button>
+                              <Button variant="outline" onClick={fetchSettings}>Refresh Sessions</Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <Separator />
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Create New Session</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="session_name">Name</Label>
+                            <Input id="session_name" value={newSession.name} onChange={(e) => setNewSession({ ...newSession, name: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="session_code">Code</Label>
+                            <Input id="session_code" value={newSession.code || ''} onChange={(e) => setNewSession({ ...newSession, code: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="session_start">Start At</Label>
+                            <Input id="session_start" type="datetime-local" value={newSession.start_at || ''} onChange={(e) => setNewSession({ ...newSession, start_at: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="session_end">End At</Label>
+                            <Input id="session_end" type="datetime-local" value={newSession.end_at || ''} onChange={(e) => setNewSession({ ...newSession, end_at: e.target.value })} />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch checked={newSession.activate || false} onCheckedChange={(v) => setNewSession({ ...newSession, activate: v })} />
+                          <span className="text-sm">Activate after creation</span>
+                        </div>
+                        <Button onClick={async () => {
+                          try {
+                            if (!newSession.name || !newSession.start_at) { toast.error('Name and start date are required'); return; }
+                            const payload = { name: newSession.name, code: newSession.code, start_at: newSession.start_at!, end_at: newSession.end_at, activate: newSession.activate } as any;
+                            const res = await adminService.createSession(payload);
+                            toast.success('Session created');
+                            await fetchSettings();
+                            setNewSession({ name: '', code: '', start_at: '', end_at: '', activate: false });
+                          } catch (e: any) {
+                            toast.error(e.response?.data?.message || 'Failed to create session');
+                          }
+                        }}>Create Session</Button>
+                      </div>
+                      <Separator />
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">All Sessions</h3>
+                        <div className="grid grid-cols-1 gap-2">
+                          {sessions.map((s) => (
+                            <div key={s.id} className="flex items-center justify-between border rounded p-3">
+                              <div>
+                                <div className="font-medium">{s.name} {s.is_active && <span className="text-green-700">(Active)</span>}</div>
+                                <div className="text-sm text-muted-foreground">{s.code || ''} • {s.start_at || ''} {s.end_at ? `→ ${s.end_at}` : ''}</div>
+                              </div>
+                              <div className="flex gap-2">
+                                {!s.is_active && (
+                                  <Button variant="outline" size="sm" onClick={async () => { try { await adminService.activateSession(s.id); toast.success('Session activated'); await fetchSettings(); } catch (e:any) { toast.error(e.response?.data?.message || 'Activation failed'); } }}>Activate</Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>

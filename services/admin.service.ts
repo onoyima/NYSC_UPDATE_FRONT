@@ -9,8 +9,18 @@ import {
 import { Student } from "@/types/auth.types";
 
 class AdminService {
+  private getSelectedSessionId(): number | undefined {
+    if (typeof window === 'undefined') return undefined;
+    const raw = localStorage.getItem('admin_selected_session_id');
+    if (!raw) return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+  }
   async getDashboardStats(): Promise<AdminDashboardStats> {
-    const response = await axiosInstance.get("/api/nysc/admin/dashboard");
+    const sessionId = this.getSelectedSessionId();
+    const response = await axiosInstance.get("/api/nysc/admin/dashboard", {
+      params: sessionId ? { session_id: sessionId } : undefined,
+    });
     return response.data;
   }
 
@@ -35,8 +45,9 @@ class AdminService {
     limit = 10,
     search?: string
   ): Promise<{ students: Student[]; total: number; totalPages: number }> {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get("/api/nysc/admin/students", {
-      params: { page, limit, search },
+      params: { page, limit, search, session_id: sessionId },
     });
     return response.data;
   }
@@ -66,6 +77,7 @@ class AdminService {
     }
   ): Promise<{ payments: PaymentRecord[]; total: number; totalPages: number }> {
     try {
+      const sessionId = this.getSelectedSessionId();
       const response = await axiosInstance.get("/api/nysc/admin/payments", {
         params: {
           page,
@@ -75,6 +87,7 @@ class AdminService {
           search: filters?.search,
           dateStart: filters?.dateStart,
           dateEnd: filters?.dateEnd,
+          session_id: sessionId,
         },
       });
 
@@ -159,10 +172,11 @@ class AdminService {
 
   async exportData(options: ExportOptions): Promise<Blob> {
     try {
+      const sessionId = this.getSelectedSessionId();
       const response = await axiosInstance.get(
         `/api/nysc/admin/exports/${options.format}`,
         {
-          params: options.filters,
+          params: { ...options.filters, session_id: sessionId },
           responseType: "blob",
           timeout: 60000, // 60 seconds timeout for large exports
         }
@@ -230,12 +244,18 @@ class AdminService {
 
   // Student management methods
   async getAllStudents() {
-    const response = await axiosInstance.get("/api/nysc/admin/students/all");
+    const sessionId = this.getSelectedSessionId();
+    const response = await axiosInstance.get("/api/nysc/admin/students/all", {
+      params: sessionId ? { session_id: sessionId } : undefined,
+    });
     return response;
   }
 
   async getStudentStats() {
-    const response = await axiosInstance.get("/api/nysc/admin/students/stats");
+    const sessionId = this.getSelectedSessionId();
+    const response = await axiosInstance.get("/api/nysc/admin/students/stats", {
+      params: sessionId ? { session_id: sessionId } : undefined,
+    });
     return response;
   }
 
@@ -247,9 +267,11 @@ class AdminService {
   }
 
   async exportStudents() {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get(
       "/api/nysc/admin/students/export",
       {
+        params: sessionId ? { session_id: sessionId } : undefined,
         responseType: "blob",
       }
     );
@@ -267,10 +289,11 @@ class AdminService {
     total: number;
     totalPages: number;
   }> {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get(
       "/api/nysc/admin/duplicate-payments",
       {
-        params: { page, limit, search },
+        params: { page, limit, search, session_id: sessionId },
       }
     );
     return response.data;
@@ -288,6 +311,32 @@ class AdminService {
       settings
     );
     return response;
+  }
+
+  // Session management
+  async getSessions(): Promise<{ success: boolean; sessions: any[]; active_session_id?: number }> {
+    const response = await axiosInstance.get('/api/nysc/admin/sessions');
+    return response.data;
+  }
+
+  async createSession(data: { name: string; code?: string; start_at: string; end_at?: string; status?: string; activate?: boolean }) {
+    const response = await axiosInstance.post('/api/nysc/admin/sessions', data);
+    return response.data;
+  }
+
+  async updateSession(id: number, data: Partial<{ name: string; code?: string; start_at: string; end_at?: string; status?: string; is_active?: boolean }>) {
+    const response = await axiosInstance.put(`/api/nysc/admin/sessions/${id}`, data);
+    return response.data;
+  }
+
+  async activateSession(id: number) {
+    const response = await axiosInstance.post(`/api/nysc/admin/sessions/${id}/activate`);
+    return response.data;
+  }
+
+  async getActiveSession() {
+    const response = await axiosInstance.get('/api/nysc/admin/sessions/active');
+    return response.data;
   }
 
   async getEmailSettings() {
@@ -320,8 +369,10 @@ class AdminService {
 
   // Submissions management methods
   async getSubmissions(page: number = 1, limit: number = 10) {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get(
-      `/api/nysc/admin/submissions?page=${page}&limit=${limit}`
+      `/api/nysc/admin/submissions`,
+      { params: { page, limit, session_id: sessionId } }
     );
     return response.data;
   }
@@ -501,7 +552,8 @@ class AdminService {
 
   async getDocxReviewData(sessionId: string) {
     const response = await axiosInstance.get(
-      `/api/nysc/admin/docx-import/review/${sessionId}`
+      `/api/nysc/admin/docx-import/review/${sessionId}`,
+      { params: { session_id: sessionId } }
     );
     return response.data;
   }
@@ -546,8 +598,9 @@ class AdminService {
       sort_order?: string;
     }
   ) {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get("/api/nysc/admin/students-list", {
-      params: { page, per_page: perPage, ...filters },
+      params: { page, per_page: perPage, ...filters, session_id: sessionId },
     });
     return response.data;
   }
@@ -556,10 +609,11 @@ class AdminService {
     course_study?: string;
     format?: string;
   }): Promise<Blob> {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get(
       "/api/nysc/admin/students-list/export",
       {
-        params: filters,
+        params: { ...filters, session_id: sessionId },
         responseType: "blob",
         timeout: 60000, // 60 seconds timeout for large exports
       }
@@ -598,7 +652,9 @@ class AdminService {
   }
 
   async getDataAnalysis() {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get('/api/nysc/admin/docx-import/data-analysis', {
+      params: { session_id: sessionId },
       timeout: 120000 // 2 minutes timeout for comprehensive analysis
     });
     return response.data;
@@ -630,7 +686,9 @@ class AdminService {
   // Pending Payments methods
   async getPendingPaymentsStats() {
     try {
+      const sessionId = this.getSelectedSessionId();
       const response = await axiosInstance.get('/api/nysc/admin/payments/pending-stats', {
+        params: { session_id: sessionId },
         timeout: 30000
       });
       return response.data;
@@ -664,16 +722,18 @@ class AdminService {
   }
 
   async getPaymentStatistics(filters?: { dateStart?: string; dateEnd?: string; payment_method?: string; department?: string; amount_type?: 'standard' | 'late'; duplicates?: 'all' | 'only' | 'exclude'; }) {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get('/api/nysc/admin/payments/statistics', {
-      params: filters,
+      params: { ...filters, session_id: sessionId },
       timeout: 60000
     });
     return response.data;
   }
 
   async exportPaymentStatistics(options?: { format?: 'csv' | 'excel'; filters?: { dateStart?: string; dateEnd?: string; payment_method?: string; department?: string; amount_type?: 'standard' | 'late'; duplicates?: 'all' | 'only' | 'exclude'; } }): Promise<Blob> {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get('/api/nysc/admin/payments/statistics/export', {
-      params: { format: options?.format ?? 'csv', ...(options?.filters || {}) },
+      params: { format: options?.format ?? 'csv', ...(options?.filters || {}), session_id: sessionId },
       responseType: 'blob',
       timeout: 60000
     });
@@ -689,7 +749,9 @@ class AdminService {
 
   // NYSC Upload Analysis methods
   async getUploadAnalysis(fileName?: string) {
-    const params = fileName ? { file: fileName } : {};
+    const sessionId = this.getSelectedSessionId();
+    const params: any = { session_id: sessionId };
+    if (fileName) params.file = fileName;
     const response = await axiosInstance.get('/api/nysc/admin/upload-analysis', {
       params,
       timeout: 120000 // 2 minutes timeout for analysis
@@ -705,8 +767,9 @@ class AdminService {
   }
 
   async exportUploadAnalysis(params: { file?: string; filter: 'uploaded' | 'not_uploaded' | 'uploaded_not_in_nysc'; format?: 'excel' | 'csv'; }): Promise<Blob> {
+    const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get('/api/nysc/admin/upload-analysis/export', {
-      params: { file: params.file, filter: params.filter, format: params.format || 'excel' },
+      params: { ...params, format: params.format || 'excel', session_id: sessionId },
       responseType: 'blob',
       timeout: 60000
     });

@@ -32,6 +32,14 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { hasPermission, getUserRole } from '@/utils/rolePermissions';
+import { useSession } from '@/contexts/SessionContext';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 interface SidebarProps {
   className?: string;
@@ -169,6 +177,11 @@ const adminNavItems: NavItem[] = [
     icon: Shield,
   },
   {
+    title: 'Sessions',
+    href: '/admin/sessions',
+    icon: Calendar,
+  },
+  {
     title: 'Settings',
     href: '/admin/settings',
     icon: Settings,
@@ -180,6 +193,16 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const pathname = usePathname();
   const { userType, user } = useAuth();
   const { isMobileOpen, closeMobileSidebar } = useSidebar();
+  
+  // Conditionally use session context (it's only provided in AdminLayout)
+  let sessionContext: any = null;
+  try {
+    sessionContext = useSession();
+  } catch (e) {
+    // Session context not available (normal for students)
+  }
+
+  const { sessions, selectedSession, selectSession } = sessionContext || { sessions: [], selectedSession: null };
 
   // Filter admin navigation items based on user permissions
   const getFilteredAdminNavItems = () => {
@@ -232,6 +255,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return hasPermission(userRole, 'canAssignRoles');
         case '/admin/roles':
           return hasPermission(userRole, 'canAssignRoles');
+        case '/admin/sessions':
+          return hasPermission(userRole, 'canManageSystem');
         case '/admin/settings':
           return hasPermission(userRole, 'canManageSystem');
         default:
@@ -379,11 +404,40 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       </div>
 
       {/* Footer */}
-      <div className="border-t p-3">
+      <div className="border-t p-3 bg-gray-50/50">
+        {userType === 'admin' && selectedSession && !isCollapsed && (
+          <div className="mb-4 space-y-2">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">
+              Active Session
+            </label>
+            <Select 
+              value={selectedSession.id.toString()} 
+              onValueChange={(val) => selectSession(Number(val))}
+            >
+              <SelectTrigger className="h-9 text-xs border-gray-200 bg-white hover:border-primary/50 transition-all">
+                <SelectValue placeholder="Select Session" />
+              </SelectTrigger>
+              <SelectContent className="z-[100]">
+                {sessions.map((s: any) => (
+                  <SelectItem key={s.id} value={s.id.toString()} className="text-xs">
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <Separator className="mb-3" />
         {!isCollapsed && (
-          <div className="text-xs text-muted-foreground text-center">
-            Student Update Portal v1.0
+          <div className="flex flex-col items-center gap-1">
+            <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+              NYSC Portal v1.2
+            </div>
+            {selectedSession && userType === 'admin' && (
+               <div className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary rounded-full font-bold">
+                 {selectedSession.name}
+               </div>
+            )}
           </div>
         )}
       </div>

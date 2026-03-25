@@ -80,7 +80,7 @@ export default function DuplicatePaymentsPage() {
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-background dark:bg-gray-800 rounded-lg border p-6">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-blue-100 text-blue-600">
                   <MdPayment size={24} />
@@ -92,7 +92,7 @@ export default function DuplicatePaymentsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-background dark:bg-gray-800 rounded-lg border p-6">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-red-100 text-red-600">
                   <MdWarning size={24} />
@@ -104,7 +104,7 @@ export default function DuplicatePaymentsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-background dark:bg-gray-800 rounded-lg border p-6">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-green-100 text-green-600">
                   <MdPayment size={24} />
@@ -119,7 +119,7 @@ export default function DuplicatePaymentsPage() {
         )}
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow mb-8">
+        <div className="bg-background dark:bg-gray-800 rounded-lg border mb-8">
           <div className="p-6">
             <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
               <div className="flex-grow relative">
@@ -128,7 +128,7 @@ export default function DuplicatePaymentsPage() {
                 </div>
                 <input
                   type="text"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                  className="block w-full pl-10 pr-3 py-2 border rounded-md leading-5 bg-background dark:bg-gray-700 placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-foreground"
                   placeholder="Search by name, matric number, or email"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -145,7 +145,7 @@ export default function DuplicatePaymentsPage() {
         </div>
 
         {/* Duplicate Payments Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-background dark:bg-gray-800 rounded-lg border overflow-hidden">
           <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
             <h3 className="text-lg leading-6 font-medium text-gray-900">
               Duplicate Payments
@@ -188,7 +188,7 @@ export default function DuplicatePaymentsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-background dark:bg-gray-800 divide-y">
                   {duplicatePayments?.map((item) => (
                     <tr key={item.student_id}>
                       <td className="px-6 py-4 whitespace-nowrap">

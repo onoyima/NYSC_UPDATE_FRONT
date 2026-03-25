@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { Moon, Sun, Monitor, LogOut, User, Settings, Bell, Search, Menu } from 'lucide-react';
+import { Moon, Sun, Monitor, LogOut, User, Settings, Bell, Search, Menu, Calendar, RefreshCw } from 'lucide-react';
 import { getInitials } from '@/utils/formatters';
+import adminService from '@/services/admin.service';
+import { toast } from 'sonner';
 
 interface NavbarProps {
   userType?: 'student' | 'admin';
@@ -29,6 +31,21 @@ const Navbar: React.FC<NavbarProps> = ({
   const { theme, setTheme } = useTheme();
   const { toggleMobileSidebar } = useSidebar();
   const router = useRouter();
+
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<number | undefined>(undefined);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+
+  useEffect(() => {
+    if (userType === 'admin') {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('admin_selected_session_id') : '';
+      setSelectedSessionId(raw || '');
+      adminService.getSessions().then((res) => {
+        setSessions(res.sessions || []);
+        setActiveSessionId(res.active_session_id);
+      }).catch(() => {});
+    }
+  }, [userType]);
 
   const handleLogout = async () => {
     await logout();
@@ -94,6 +111,79 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Section */}
         <div className="flex items-center gap-2">
+          {userType === 'admin' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Session
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel>Active: {activeSessionId ?? 'None'}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-2">
+                  <label className="text-xs block mb-1">View Session</label>
+                  <select
+                    className="w-full border rounded px-2 py-2 text-sm"
+                    value={selectedSessionId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedSessionId(val);
+                      if (typeof window !== 'undefined') {
+                        if (val) localStorage.setItem('admin_selected_session_id', val);
+                        else localStorage.removeItem('admin_selected_session_id');
+                      }
+                      toast.success(val ? `Viewing session ${val}` : 'Viewing active session');
+                    }}
+                  >
+                    <option value="">Default (Active Session)</option>
+                    {sessions.map((s: any) => (
+                      <option key={s.id} value={String(s.id)}>
+                        {s.name} (ID: {s.id}){s.is_active ? ' • Active' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSessionId('');
+                        if (typeof window !== 'undefined') localStorage.removeItem('admin_selected_session_id');
+                        toast.success('Viewing active session');
+                      }}
+                    >
+                      Reset View
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        const id = Number(selectedSessionId);
+                        if (!id) { toast.error('Select a session to activate'); return; }
+                        try {
+                          const res = await adminService.activateSession(id);
+                          setActiveSessionId(res.active_session_id);
+                          toast.success(`Activated session ${id}`);
+                        } catch (e: any) {
+                          toast.error(e?.response?.data?.message || 'Activation failed');
+                        }
+                      }}
+                    >
+                      Activate Selected
+                    </Button>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Link href="/admin/settings" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full">
+                        Manage Sessions
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
             <Bell className="h-4 w-4" />

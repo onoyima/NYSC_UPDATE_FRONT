@@ -84,6 +84,18 @@ export interface SystemControl {
   message?: string;
   lastUpdatedBy: string;
   lastUpdatedAt: string;
+  active_session_id?: number;
+  active_session_name?: string;
+}
+
+export interface NyscSession {
+  id: number;
+  name: string;
+  code?: string;
+  start_at?: string;
+  end_at?: string;
+  is_active: boolean;
+  status?: string;
 }
 
 export interface PaymentHistoryRecord {
