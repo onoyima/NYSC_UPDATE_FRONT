@@ -25,6 +25,7 @@ interface StudentData {
   is_military?: boolean;
   course_study: string;
   study_mode: 'Full-Time' | 'Part-Time' | 'Sandwich';
+  updated_at: string;
 }
 
 // Format ISO date to DD/MM/YYYY
@@ -41,7 +42,8 @@ export default function AdminDataPage() {
   const [data, setData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: keyof StudentData; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof StudentData; direction: 'asc' | 'desc' } | null>({ key: 'updated_at', direction: 'desc' });
+  const [filterPeriod, setFilterPeriod] = useState('all');
   
   // Check if user is admin for download permissions
   const isAdmin = isAuthenticated && userType === 'admin';
@@ -53,11 +55,28 @@ export default function AdminDataPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = data.filter(item =>
-    Object.values(item).some(val =>
+  const filtered = data.filter(item => {
+    const matchesSearch = Object.values(item).some(val =>
       String(val).toLowerCase().includes(search.toLowerCase())
-    )
-  );
+    );
+    
+    if (!matchesSearch) return false;
+    
+    if (filterPeriod === 'all') return true;
+    
+    const updatedDate = new Date(item.updated_at);
+    const now = new Date();
+    
+    if (filterPeriod === 'month') {
+      return updatedDate.getMonth() === now.getMonth() && updatedDate.getFullYear() === now.getFullYear();
+    }
+    
+    if (filterPeriod === 'year') {
+      return updatedDate.getFullYear() === now.getFullYear();
+    }
+    
+    return true;
+  });
 
  const sorted = sortConfig
   ? [...filtered].sort((a, b) => {
@@ -214,8 +233,8 @@ export default function AdminDataPage() {
         {/* Main Content */}
         <div>
             {/* Search Input */}
-            <div className="mb-6 lg:mb-8">
-              <div className="relative max-w-full sm:max-w-md">
+            <div className="mb-6 lg:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="relative w-full sm:max-w-md">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 </div>
@@ -227,6 +246,20 @@ export default function AdminDataPage() {
                   className="block w-full pl-9 sm:pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-xl leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 shadow-sm hover:shadow-md text-sm sm:text-base"
                 />
               </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500">View:</span>
+                <select 
+                  value={filterPeriod} 
+                  onChange={e => setFilterPeriod(e.target.value)}
+                  className="bg-white border border-gray-300 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 shadow-sm"
+                >
+                  <option value="all">All Time</option>
+                  <option value="month">This Month</option>
+                  <option value="year">This Year</option>
+                </select>
+              </div>
+            </div>
               {search && (
                 <p className="mt-2 text-sm text-gray-600">
                   Showing {sorted.length} of {data.length} students
@@ -263,9 +296,10 @@ export default function AdminDataPage() {
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marital Status</th>
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JAMB No</th>
                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Military</th>
-                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Study Mode</th>
-                          </tr>
+                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Study Mode</th>
+                             <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated At</th>
+                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {sorted.map((s, index) => (
@@ -332,10 +366,11 @@ export default function AdminDataPage() {
                                     ? 'bg-orange-100 text-orange-800'
                                     : 'bg-purple-100 text-purple-800'
                                 }`}>
-                                  {s.study_mode}
-                                </span>
-                              </td>
-                            </tr>
+                                   {s.study_mode}
+                                 </span>
+                               </td>
+                               <td className="px-1 py-2 text-xs text-gray-500">{formatDate(s.updated_at)}</td>
+                             </tr>
                           ))}
                       </tbody>
                     </table>
@@ -366,9 +401,10 @@ export default function AdminDataPage() {
                         { label: 'Marital Status', key: 'marital_status' },
                         { label: 'JAMB No', key: 'jamb_no' },
                         { label: 'Military', key: 'is_military' },
-                        { label: 'Course', key: 'course_study' },
-                        { label: 'Study Mode', key: 'study_mode' }
-                      ].map(col => (
+                         { label: 'Course', key: 'course_study' },
+                         { label: 'Study Mode', key: 'study_mode' },
+                         { label: 'Updated At', key: 'updated_at' }
+                       ].map(col => (
                         <th
                           key={col.key}
                           onClick={() => requestSort(col.key as keyof StudentData)}
@@ -455,11 +491,11 @@ export default function AdminDataPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              s.is_status 
+                              s.is_status === false 
                                 ? 'bg-yellow-100 text-yellow-800' 
                                 : 'bg-blue-100 text-blue-800'
                             }`}>
-                              {s.is_status ? 'Revalidation' : 'Fresh'}
+                              {s.is_status === false ? 'Revalidation' : 'Fresh'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -500,7 +536,6 @@ export default function AdminDataPage() {
                   </tbody>
                 </table>
               </div>
-              
               {/* Table Footer with Stats */}
               {sorted.length > 0 && (
                 <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
@@ -524,10 +559,7 @@ export default function AdminDataPage() {
               )}
             </div>
           </div>
-        </div>
       </div>
-
-
     </div>
   );
 }

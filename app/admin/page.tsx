@@ -463,7 +463,7 @@ const AdminDashboard: React.FC = () => {
                           <div className="w-12 h-12 bg-orange-200 rounded-lg flex items-center justify-center">
                             <Users className="w-6 h-6 text-orange-600" />
                           </div>
-                        </div>
+                          </div>
                         <div className="flex items-center mt-4 text-sm">
                           <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
                           <span className="text-green-600 font-medium">+18.7%</span>

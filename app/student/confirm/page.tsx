@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import axios from '@/utils/axios';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,12 +37,27 @@ const DataConfirmationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [sessions, setSessions] = useState<any[]>([]);
   const [studyModes, setStudyModes] = useState<any[]>([]);
+  const [ninSlip, setNinSlip] = useState<File | null>(null);
+  const [jambLetter, setJambLetter] = useState<File | null>(null);
+  const [ninPreview, setNinPreview] = useState<{url: string, isPdf: boolean} | null>(null);
+  const [jambPreview, setJambPreview] = useState<{url: string, isPdf: boolean} | null>(null);
 
   useEffect(() => {
     fetchStudentDetails();
     fetchStudyModes();
+    fetchSessions();
   }, []);
+
+  const fetchSessions = async () => {
+    try {
+      const response = await axios.get('/api/nysc/vua-sessions');
+      setSessions(response.data.sessions || []);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+    }
+  };
 
   const fetchStudyModes = async () => {
     try {
@@ -98,7 +114,19 @@ const DataConfirmationPage: React.FC = () => {
 
         };
 
-      setFormData(prefilledData);
+        setFormData(prefilledData);
+
+        // Auto-set graduation_year from the session if not already set
+        // Fetch sessions to find match by session name (year format)
+        try {
+          const sessRes = await axios.get('/api/nysc/vua-sessions');
+          const sessList = sessRes.data.sessions || [];
+          if (sessList.length > 0 && !prefilledData.graduation_year) {
+            // Use the most recent session's name as the graduation year
+            const activeSession = sessList[0];
+            setFormData((prev: any) => ({ ...prev, graduation_year: activeSession.session || activeSession.session_name || activeSession.name || activeSession.year || '' }));
+          }
+        } catch {}
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to fetch student details');
     } finally {
@@ -124,10 +152,16 @@ const DataConfirmationPage: React.FC = () => {
 
       // Note: We check for 'username' here but map it to 'email' in the API call
 
-      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].toString().trim() === '');
+      const missingFields = requiredFields.filter(field => field !== 'cgpa' && (!formData[field] || formData[field].toString().trim() === ''));
 
       if (missingFields.length > 0) {
         toast.error(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!ninSlip || !jambLetter) {
+        toast.error('NIN Slip and JAMB Admission Letter are required.');
         setIsSubmitting(false);
         return;
       }
@@ -148,18 +182,31 @@ const DataConfirmationPage: React.FC = () => {
         payment_amount: systemStatus.current_fee // Use dynamic payment amount from admin settings
       };
 
+      // Use FormData for file uploads
+      const dataToSend = new FormData();
+      Object.keys(confirmData).forEach(key => {
+        dataToSend.append(key, confirmData[key]);
+      });
+      dataToSend.append('nin_slip', ninSlip || '');
+      dataToSend.append('jamb_admission_letter', jambLetter || '');
+
       // Call confirmDetails API to save data to database
-      const response = await studentService.confirmDetails(confirmData);
+      const response = await axios.post('/api/nysc/student/confirm', dataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       // Store the form data temporarily in localStorage for use after payment
       localStorage.setItem('nysc_form_data', JSON.stringify(formData));
 
-      if (response.data && response.data.submission_token) {
-        localStorage.setItem('nysc_submission_token', response.data.submission_token);
+      const submissionData = response.data?.data;
+      if (submissionData && submissionData.submission_token) {
+        localStorage.setItem('nysc_submission_token', submissionData.submission_token);
+        
+        // Redirect to payment page with token and amount
+        router.push(`/student/payment?token=${submissionData.submission_token}&amount=${submissionData.payment_amount}`);
+      } else {
+        router.push('/student/payment');
       }
-
-      // Redirect to payment page
-      router.push('/student/payment');
       toast.success('Data confirmed successfully. Proceeding to payment...');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to confirm data');
@@ -328,8 +375,9 @@ const DataConfirmationPage: React.FC = () => {
                         <Input
                           id="matric_no"
                           value={formData.matric_no || ''}
-                          onChange={(e) => handleInputChange('matric_no', e.target.value)}
-                          required
+                          readOnly
+                          className="bg-slate-100 cursor-not-allowed text-slate-600 font-mono"
+                          title="Matriculation number cannot be changed"
                         />
                       </div>
                       <div>
@@ -375,13 +423,12 @@ const DataConfirmationPage: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
+                      <div className="hidden">
                         <Label htmlFor="level">Current Level</Label>
                         <Input
                           id="level"
                           value={formData.level || ''}
                           onChange={(e) => handleInputChange('level', e.target.value)}
-                          placeholder="e.g., 100, 200, 300, 400"
                         />
                       </div>
                     </div>
@@ -407,30 +454,109 @@ const DataConfirmationPage: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="graduation_year">Graduation Year</Label>
-                        <Input
-                          id="graduation_year"
-                          type="number"
-                          min="2000"
-                          max="2030"
-                          value={formData.graduation_year || ''}
-                          onChange={(e) => handleInputChange('graduation_year', e.target.value)}
-                        />
+                        <Label htmlFor="graduation_year">Graduation Session *</Label>
+                        <Select value={formData.graduation_year || ''} onValueChange={(val) => handleInputChange('graduation_year', val)}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={sessions.length > 0 ? "Select session" : "Loading sessions..."} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {sessions.map((session: any) => (
+                              <SelectItem key={session.id} value={session.session || session.session_name || session.name}>
+                                {session.session || session.session_name || session.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="cgpa">CGPA</Label>
-                        <Input
-                          id="cgpa"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="5"
-                          value={formData.cgpa || ''}
-                          onChange={(e) => handleInputChange('cgpa', e.target.value)}
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4 pt-4 border-t">
+                      <div className="space-y-4">
+                        <Label htmlFor="nin_slip" className="text-sm font-semibold">NIN Slip (PDF/Image, max 2MB) *</Label>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <Input
+                              id="nin_slip"
+                              type="file"
+                              accept=".pdf,image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file && file.size > 2 * 1024 * 1024) {
+                                  toast.error('NIN Slip exceeds 2MB limit');
+                                  e.target.value = '';
+                                } else if (file) {
+                                  setNinSlip(file);
+                                  setNinPreview({
+                                    url: URL.createObjectURL(file),
+                                    isPdf: file.type === 'application/pdf'
+                                  });
+                                }
+                              }}
+                              className="bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
+                              required
+                            />
+                            {ninSlip && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
+                          </div>
+                          
+                          {ninPreview && (
+                            <div className="p-2 border border-slate-200 rounded-lg bg-slate-50 flex flex-col items-center justify-center min-h-[120px]">
+                              {ninPreview.isPdf ? (
+                                <div className="flex flex-col items-center p-2">
+                                  <svg className="w-12 h-12 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                  </svg>
+                                  <span className="text-sm font-medium text-slate-700">PDF Document Selected</span>
+                                </div>
+                              ) : (
+                                <img src={ninPreview.url} alt="NIN Preview" className="max-h-48 rounded object-contain shadow-sm" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <Label htmlFor="jamb_letter" className="text-sm font-semibold">JAMB Admission Letter (PDF/Image, max 2MB) *</Label>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <Input
+                              id="jamb_letter"
+                              type="file"
+                              accept=".pdf,image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file && file.size > 2 * 1024 * 1024) {
+                                  toast.error('JAMB Letter exceeds 2MB limit');
+                                  e.target.value = '';
+                                } else if (file) {
+                                  setJambLetter(file);
+                                  setJambPreview({
+                                    url: URL.createObjectURL(file),
+                                    isPdf: file.type === 'application/pdf'
+                                  });
+                                }
+                              }}
+                              className="bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
+                              required
+                            />
+                            {jambLetter && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
+                          </div>
+
+                          {jambPreview && (
+                            <div className="p-2 border border-slate-200 rounded-lg bg-slate-50 flex flex-col items-center justify-center min-h-[120px]">
+                              {jambPreview.isPdf ? (
+                                <div className="flex flex-col items-center p-2">
+                                  <svg className="w-12 h-12 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                  </svg>
+                                  <span className="text-sm font-medium text-slate-700">PDF Document Selected</span>
+                                </div>
+                              ) : (
+                                <img src={jambPreview.url} alt="JAMB Preview" className="max-h-48 rounded object-contain shadow-sm" />
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>

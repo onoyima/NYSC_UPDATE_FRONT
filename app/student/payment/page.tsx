@@ -110,7 +110,9 @@ const PaymentPage: React.FC = () => {
   const initiatePayment = async () => {
     setIsProcessing(true);
     try {
-      const response = await studentService.initiatePayment();
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token') || undefined;
+      const response = await studentService.initiatePayment(token);
       const paymentData: PaymentResponse = response.data;
 
       // Redirect to Paystack payment page
@@ -168,8 +170,11 @@ const PaymentPage: React.FC = () => {
     );
   }
 
-  // Check if there's form data in localStorage or if user came from confirmation page
-  const hasFormData = typeof window !== 'undefined' && localStorage.getItem('nysc_form_data');
+  // Check if there's form data in localStorage or if user came from confirmation page with a token
+  const hasFormData = typeof window !== 'undefined' && (
+    localStorage.getItem('nysc_form_data') || 
+    new URLSearchParams(window.location.search).get('token')
+  );
 
   if (!hasFormData && !studentDetails?.is_submitted) {
     return (

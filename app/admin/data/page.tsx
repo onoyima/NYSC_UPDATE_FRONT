@@ -22,18 +22,27 @@ interface StudentData {
   marital_status: string;
   jamb_no: string;
   is_military?: boolean;
+  department: string;
   course_study: string;
   study_mode: 'Full-Time' | 'Part-Time' | 'Sandwich';
   updated_at: string;
 }
 
 // Format ISO date to DD/MM/YYYY
-const formatDate = (iso: string): string => {
+const formatDate = (iso: string | null | undefined): string => {
+  if (!iso) return 'N/A';
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso);
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yyyy = d.getFullYear();
   return `${dd}/${mm}/${yyyy}`;
+};
+
+// Format text to Title Case
+const formatTitleCase = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return String(str).toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 };
 
 export default function AdminDataPage() {
@@ -43,12 +52,19 @@ export default function AdminDataPage() {
   const [search, setSearch] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: keyof StudentData; direction: 'asc' | 'desc' } | null>(null);
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 50;
+  
   // Check if user is admin for download permissions
   const isAdmin = isAuthenticated && userType === 'admin';
 
   useEffect(() => {
     axios.get('/api/nysc')
-      .then(res => setData(res.data.data))
+      .then(res => {
+        const responseData = res.data?.data || res.data;
+        setData(Array.isArray(responseData) ? responseData : []);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -58,6 +74,11 @@ export default function AdminDataPage() {
       String(val).toLowerCase().includes(search.toLowerCase())
     )
   );
+
+  // Reset to page 1 on search or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sortConfig]);
 
  const sorted = sortConfig
   ? [...filtered].sort((a, b) => {
@@ -74,6 +95,9 @@ export default function AdminDataPage() {
     if (sortConfig?.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
   };
+
+  const paginatedData = sorted.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const totalPages = Math.ceil(sorted.length / perPage);
 
   const handleDownload = async (fmt: 'csv' | 'xlsx' | 'pdf') => {
     try {
@@ -316,16 +340,18 @@ export default function AdminDataPage() {
             </div>
 
             {/* Desktop Table View - Hidden on mobile */}
-            <div className="hidden lg:block bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+            <div className="hidden lg:block bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 w-full">
+              <div className="overflow-x-auto w-full">
+                <table className="min-w-[1500px] w-full divide-y divide-gray-200">
                   <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
                       {[
+                        { label: 'Updated At', key: 'updated_at' },
                         { label: 'Matric No', key: 'matric_no' },
                         { label: 'First Name', key: 'fname' },
                         { label: 'Middle Name', key: 'mname' },
                         { label: 'Surname', key: 'lname' },
+                        { label: 'Department', key: 'department' },
                         { label: 'Phone', key: 'phone' },
                         { label: 'State', key: 'state' },
                         { label: 'CGPA', key: 'cgpa' },
@@ -337,8 +363,7 @@ export default function AdminDataPage() {
                         { label: 'JAMB No', key: 'jamb_no' },
                         { label: 'Military', key: 'is_military' },
                         { label: 'Course', key: 'course_study' },
-                        { label: 'Study Mode', key: 'study_mode' },
-                        { label: 'Last Updated', key: 'updated_at' }
+                        { label: 'Study Mode', key: 'study_mode' }
                       ].map(col => (
                         <th
                           key={col.key}
@@ -358,9 +383,9 @@ export default function AdminDataPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sorted.length === 0 ? (
+                    {paginatedData.length === 0 ? (
                       <tr>
-                        <td colSpan={16} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={19} className="px-6 py-12 text-center text-gray-500">
                           <div className="flex flex-col items-center">
                             <MagnifyingGlassIcon className="w-12 h-12 text-gray-300 mb-4" />
                             <p className="text-lg font-medium">No students found</p>
@@ -369,30 +394,36 @@ export default function AdminDataPage() {
                         </td>
                       </tr>
                     ) : (
-                      sorted.map((s, index) => (
+                      paginatedData.map((s, index) => (
                         <tr 
                           key={s.id} 
                           className={`hover:bg-indigo-50 transition-colors duration-200 ${
                             index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                           }`}
                         >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                            {formatDate(s.updated_at)}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {s.matric_no}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {s.fname}
+                            {formatTitleCase(s.fname)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {s.mname || '-'}
+                            {formatTitleCase(s.mname) || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {s.lname}
+                            {formatTitleCase(s.lname)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 truncate max-w-[150px]" title={s.department}>
+                            {formatTitleCase(s.department) || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {s.phone}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {s.state}
+                            {formatTitleCase(s.state)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -414,10 +445,10 @@ export default function AdminDataPage() {
                               {s.is_status ? 'Revalidation' : 'Fresh'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">
                             {s.gender}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">
                             {s.marital_status}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -432,8 +463,8 @@ export default function AdminDataPage() {
                               {s.is_military ? 'Yes' : 'No'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={s.course_study}>
-                            {s.course_study}
+                          <td className="px-6 py-4 text-sm text-gray-700 max-w-[150px] truncate" title={s.course_study}>
+                            {formatTitleCase(s.course_study)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -446,9 +477,6 @@ export default function AdminDataPage() {
                               {s.study_mode}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {formatDate(s.updated_at)}
-                          </td>
                         </tr>
                       ))
                     )}
@@ -456,14 +484,38 @@ export default function AdminDataPage() {
                 </table>
               </div>
               
-              {/* Table Footer with Stats */}
+              {/* Table Footer with Stats & Pagination */}
               {sorted.length > 0 && (
                 <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600 space-y-2 sm:space-y-0">
-                    <div>
-                      Showing <span className="font-medium text-gray-900">{sorted.length}</span> of{' '}
-                      <span className="font-medium text-gray-900">{data.length}</span> students
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600 space-y-4 sm:space-y-0">
+                    <div className="flex space-x-4 items-center">
+                      <div>
+                        Showing <span className="font-medium text-gray-900">{(currentPage - 1) * perPage + 1}</span> to <span className="font-medium text-gray-900">{Math.min(currentPage * perPage, sorted.length)}</span> of{' '}
+                        <span className="font-medium text-gray-900">{sorted.length}</span> results
+                      </div>
+                      
+                      {/* Pagination Controls */}
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 hover:bg-white"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-gray-900 font-medium">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 hover:bg-white"
+                        >
+                          Next
+                        </button>
+                      </div>
                     </div>
+                    
                     <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0">
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-blue-100 rounded-full"></div>
