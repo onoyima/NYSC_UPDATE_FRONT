@@ -24,6 +24,8 @@ const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState<AdminDashboardStats | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
     if (!isLoading) {
@@ -44,8 +46,7 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setIsLoadingData(true);
-        // Fetch real data from the backend API
-        const dashboardStats = await adminService.getDashboardStats();
+        const dashboardStats = await adminService.getDashboardStats(selectedMonth, selectedYear);
         setDashboardData(dashboardStats);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -58,7 +59,7 @@ const AdminDashboard = () => {
     if (userType === 'admin' && hasPermission('canViewAnalytics')) {
       fetchDashboardData();
     }
-  }, [userType, hasPermission]);
+  }, [userType, hasPermission, selectedMonth, selectedYear]);
 
   if (isLoading) {
     return (
@@ -82,7 +83,7 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   Admin Dashboard
@@ -90,13 +91,34 @@ const AdminDashboard = () => {
                 <p className="text-gray-600 dark:text-gray-400">
                   Welcome back, {user?.fname || user?.name}! Here&apos;s your NYSC management overview.
                 </p>
-                <div className="mt-4 flex items-center space-x-4">
+                <div className="mt-4 flex flex-wrap items-center gap-4">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                     Role: {userRole?.replace('_', ' ').toUpperCase()}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Last updated: {new Date().toLocaleString()}
-                  </span>
+                  
+                  {/* Month Filter */}
+                  <select 
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {new Date(2000, i).toLocaleString('default', { month: 'long' })}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Year Filter */}
+                  <select 
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2"
+                  >
+                    {[2024, 2025, 2026].map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               

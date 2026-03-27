@@ -16,10 +16,14 @@ class AdminService {
     const n = Number(raw);
     return Number.isFinite(n) ? n : undefined;
   }
-  async getDashboardStats(): Promise<AdminDashboardStats> {
+  async getDashboardStats(month?: number, year?: number): Promise<AdminDashboardStats> {
     const sessionId = this.getSelectedSessionId();
     const response = await axiosInstance.get("/api/nysc/admin/dashboard", {
-      params: sessionId ? { session_id: sessionId } : undefined,
+      params: { 
+        session_id: sessionId,
+        month,
+        year
+      },
     });
     return response.data;
   }

@@ -24,6 +24,7 @@ interface StudentData {
   is_military?: boolean;
   course_study: string;
   study_mode: 'Full-Time' | 'Part-Time' | 'Sandwich';
+  updated_at: string;
 }
 
 // Format ISO date to DD/MM/YYYY
@@ -297,6 +298,10 @@ export default function AdminDataPage() {
                           {s.is_military ? 'Yes' : 'No'}
                         </span>
                       </div>
+                      <div className="col-span-2">
+                        <span className="font-medium text-gray-500">Last Updated:</span>
+                        <p className="text-gray-900">{formatDate(s.updated_at)}</p>
+                      </div>
                     </div>
                     
                     {s.course_study && (
@@ -332,7 +337,8 @@ export default function AdminDataPage() {
                         { label: 'JAMB No', key: 'jamb_no' },
                         { label: 'Military', key: 'is_military' },
                         { label: 'Course', key: 'course_study' },
-                        { label: 'Study Mode', key: 'study_mode' }
+                        { label: 'Study Mode', key: 'study_mode' },
+                        { label: 'Last Updated', key: 'updated_at' }
                       ].map(col => (
                         <th
                           key={col.key}
@@ -439,6 +445,9 @@ export default function AdminDataPage() {
                             }`}>
                               {s.study_mode}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {formatDate(s.updated_at)}
                           </td>
                         </tr>
                       ))

@@ -102,8 +102,8 @@ const adminNavItems: NavItem[] = [
     icon: Users,
   },
   {
-    title: 'Data Management',
-    href: '/data',
+    title: 'Data Management Studio',
+    href: '/admin/manage-data',
     icon: FileText,
   },
   {
@@ -224,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/students-list':
           return true; // Temporarily remove permission check for testing
-        case '/data':
+        case '/admin/manage-data':
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/payments':
           return hasPermission(userRole, 'canViewPayments');

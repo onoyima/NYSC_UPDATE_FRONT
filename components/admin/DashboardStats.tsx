@@ -89,10 +89,18 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, ch
 const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
   const stats = [
     {
+      title: 'Total Revenue',
+      value: `₦${data.paymentAnalytics.totalRevenue.toLocaleString()}`,
+      icon: CreditCardIcon,
+      color: 'blue',
+      change: { value: 12, type: 'increase' as const },
+      subtitle: 'Total revenue collected'
+    },
+    {
       title: 'Total Students',
       value: data.totalStudents,
       icon: UsersIcon,
-      color: 'blue',
+      color: 'indigo',
       change: { value: 12, type: 'increase' as const },
       subtitle: 'Updated students'
     },
@@ -110,7 +118,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
       icon: CreditCardIcon,
       color: 'purple',
       change: { value: 15, type: 'increase' as const },
-      subtitle: `₦${data.paymentAnalytics.totalRevenue.toLocaleString()} total revenue`
+      subtitle: 'Successfully processed'
     },
     {
       title: 'Pending Payments',
@@ -124,7 +132,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
       title: 'NYSC Submissions',
       value: data.totalNyscSubmissions,
       icon: DocumentTextIcon,
-      color: 'indigo',
+      color: 'blue',
       change: { value: 10, type: 'increase' as const },
       subtitle: 'Completed submissions'
     },
@@ -162,10 +170,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Quick Insights
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {((data.completedPayments / data.totalStudents) * 100).toFixed(1)}%
+              {((data.completedPayments / (data.completedPayments + data.pendingPayments)) * 100).toFixed(1)}%
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Payment Success Rate
@@ -177,14 +185,6 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Data Completion Rate
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              ₦{(data.paymentAnalytics.totalRevenue / 1000000).toFixed(1)}M
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Total Revenue
             </p>
           </div>
         </div>
