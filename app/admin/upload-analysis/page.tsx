@@ -442,7 +442,7 @@ const UploadAnalysisPage: React.FC = () => {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch('http://localhost:8000/api/nysc/admin/upload-analysis/test-pdf', {
+                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/admin/upload-analysis/test-pdf`, {
                           headers: {
                             'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
                             'Accept': 'application/json',

@@ -246,7 +246,7 @@ const PaymentHistoryPage: React.FC = () => {
                     <div className="w-16 h-16 sm:w-20 sm:h-20 relative">
                       <Image
                         src="/logo.png"
-                        alt="NYSC Logo"
+                        alt="Student Update Logo"
                         width={80}
                         height={80}
                         className="object-contain drop-shadow-md"

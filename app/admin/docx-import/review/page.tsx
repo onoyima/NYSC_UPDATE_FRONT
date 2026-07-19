@@ -69,7 +69,7 @@ const DocxImportReviewPage = () => {
 
       try {
         setIsLoadingData(true);
-        const response = await fetch(`/api/nysc/admin/docx-import/review/${sessionId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/admin/docx-import/review/${sessionId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
           },
@@ -157,7 +157,7 @@ const DocxImportReviewPage = () => {
         approved: item.approved
       }));
 
-      const response = await fetch('/api/nysc/admin/docx-import/approve', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/admin/docx-import/approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

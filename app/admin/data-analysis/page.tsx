@@ -118,7 +118,7 @@ export default function DataAnalysisPage() {
 
   const exportNullDegreeStudents = () => {
     const link = document.createElement("a");
-    link.href = "http://localhost:8000/api/nysc/export-null-degree-students";
+    link.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/export-null-degree-students`;
     link.download = `null_degree_students_${
       new Date().toISOString().split("T")[0]
     }.xlsx`;

@@ -431,7 +431,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         {!isCollapsed && (
           <div className="flex flex-col items-center gap-1">
             <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-              NYSC Portal v1.2
+              Student Update Portal v1.2
             </div>
             {selectedSession && userType === 'admin' && (
                <div className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary rounded-full font-bold">

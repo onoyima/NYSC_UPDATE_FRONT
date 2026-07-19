@@ -298,7 +298,7 @@ const GraduandsReviewPage = () => {
                     onClick={async () => {
                       try {
                         const response = await fetch(
-                          "http://localhost:8000/api/nysc/admin/docx-import/test",
+                          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/admin/docx-import/test`,
                           {
                             headers: {
                               Authorization: `Bearer ${localStorage.getItem(
@@ -331,7 +331,7 @@ const GraduandsReviewPage = () => {
                     onClick={async () => {
                       try {
                         const response = await fetch(
-                          "http://localhost:8000/api/nysc/admin/docx-import/test-db-update",
+                          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/admin/docx-import/test-db-update`,
                           {
                             method: "POST",
                             headers: {

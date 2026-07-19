@@ -56,7 +56,7 @@ const DocxImportPage = () => {
     const fetchStats = async () => {
       try {
         setIsLoadingStats(true);
-        const response = await fetch('/api/nysc/admin/docx-import/stats', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/admin/docx-import/stats`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
           },
@@ -202,7 +202,7 @@ const DocxImportPage = () => {
                 <Button 
                   onClick={async () => {
                     try {
-                      const response = await fetch('/api/nysc/admin/docx-import/test', {
+                      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/'}api/nysc/admin/docx-import/test`, {
                         headers: {
                           'Authorization': `Bearer ${localStorage.getItem('nysc_token')}`,
                         },

@@ -66,7 +66,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           <div className="animate-pulse">
             <Image
               src="/logo.png"
-              alt="NYSC Logo"
+              alt="Student Update Logo"
               width={32}
               height={32}
               className={cn(sizeClasses[size].logo, 'object-contain drop-shadow-sm')}
