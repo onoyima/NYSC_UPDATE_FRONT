@@ -105,6 +105,7 @@ const DataConfirmationPage: React.FC = () => {
           matric_no: getValue(data.academic?.matric_no),
           department: getValue(typeof data.academic?.department === 'object' ? data.academic?.department?.name : data.academic?.department),
           course_study: getValue(data.academic?.course_study),
+          nin: getValue(data.nysc?.nin),
 
           jamb_no: getValue(data.academic?.jamb_no),
           study_mode: getValue(data.academic?.study_mode),
@@ -147,7 +148,7 @@ const DataConfirmationPage: React.FC = () => {
       const requiredFields = [
         'fname', 'lname', 'gender', 'dob', 'marital_status', 'phone', 'username', 'address',
         'lga', 'matric_no', 'department',
-        'graduation_year', 'cgpa', 'jamb_no', 'study_mode'
+        'graduation_year', 'cgpa', 'jamb_no', 'study_mode', 'nin'
       ];
 
       // Note: We check for 'username' here but map it to 'email' in the API call
@@ -179,6 +180,7 @@ const DataConfirmationPage: React.FC = () => {
         matric_no: formData.matric_no ? String(formData.matric_no) : '', // Ensure matric_no is a string
         jamb_no: formData.jamb_no ? String(formData.jamb_no) : '', // Ensure jamb_no is a string
         course_study: formData.course_study || '', // Ensure course_study is included
+        nin: formData.nin || '', // NIN number
         payment_amount: systemStatus.current_fee // Use dynamic payment amount from admin settings
       };
 
@@ -358,6 +360,20 @@ const DataConfirmationPage: React.FC = () => {
                             <SelectItem value="Religious">Religious</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="nin">NIN (11 digits) *</Label>
+                        <Input
+                          id="nin"
+                          value={formData.nin || ''}
+                          onChange={(e) => handleInputChange('nin', e.target.value)}
+                          placeholder="e.g. 12345678901"
+                          maxLength={11}
+                          required
+                        />
                       </div>
                     </div>
                   </CardContent>

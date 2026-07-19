@@ -12,7 +12,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
 import studentService from '@/services/student.service';
 import { toast } from 'sonner';
-import { CreditCard, CheckCircle, AlertCircle, ArrowLeft, ExternalLink } from 'lucide-react';
+import { CreditCard, CheckCircle, AlertCircle, ArrowLeft, ExternalLink, RefreshCw, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/utils/formatters';
@@ -46,6 +46,8 @@ const PaymentPage: React.FC = () => {
 
   const [showSuccessPage, setShowSuccessPage] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [manualReference, setManualReference] = useState('');
+  const [isManualVerifying, setIsManualVerifying] = useState(false);
 
   const checkConfirmationStatus = async () => {
     try {
@@ -155,6 +157,33 @@ const PaymentPage: React.FC = () => {
       toast.error(errorMessage);
       console.error('Payment verification error:', error);
       setIsVerifying(false);
+    }
+  };
+
+  const handleManualVerify = async () => {
+    const ref = manualReference.trim();
+    if (!ref) {
+      toast.error('Please enter a payment reference');
+      return;
+    }
+    setIsManualVerifying(true);
+    try {
+      const response = await studentService.verifyPayment(ref);
+      if (response.data.success) {
+        toast.success('Payment verified and data submitted successfully!');
+        localStorage.removeItem('nysc_form_data');
+        localStorage.removeItem('nysc_submission_token');
+        await fetchStudentDetails();
+        setPaymentReference(ref);
+        setShowSuccessPage(true);
+      } else {
+        toast.error('Payment verification failed. Please check your reference and try again.');
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Verification failed. Please check your reference and try again.';
+      toast.error(msg);
+    } finally {
+      setIsManualVerifying(false);
     }
   };
 
@@ -463,6 +492,59 @@ const PaymentPage: React.FC = () => {
                       </>
                     )}
                   </Button>
+                </CardContent>
+              </Card>
+
+              {/* Verify Payment Section */}
+              <Card className="border-dashed border-2 border-amber-300 bg-amber-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-800">
+                    <RefreshCw className="h-5 w-5" />
+                    Payment Interrupted?
+                  </CardTitle>
+                  <CardDescription className="text-amber-700">
+                    If your payment was charged but not confirmed, enter your payment reference below to verify and complete your submission.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Alert className="bg-amber-100 border-amber-300">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-800">
+                        Check your email or bank alert for the payment reference (starts with <strong>VUST-</strong>).
+                        Enter it below to verify your payment.
+                      </AlertDescription>
+                    </Alert>
+                    <div className="flex gap-3">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-500" />
+                        <Input
+                          placeholder="Enter payment reference (e.g. VUST-xxxxxxxxxx)"
+                          value={manualReference}
+                          onChange={(e) => setManualReference(e.target.value)}
+                          className="pl-10 bg-white border-amber-300"
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleManualVerify(); }}
+                        />
+                      </div>
+                      <Button
+                        onClick={handleManualVerify}
+                        disabled={isManualVerifying || !manualReference.trim()}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                      >
+                        {isManualVerifying ? (
+                          <>
+                            <LoadingSpinner size="sm" className="mr-2" />
+                            Verifying...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Verify Payment
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
