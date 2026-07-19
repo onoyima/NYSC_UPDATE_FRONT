@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { CheckCircle, AlertCircle, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { compressFileIfNeeded } from '@/utils/compressFile';
 
 interface StudentDetails {
   student: any;
@@ -484,12 +485,21 @@ const DataConfirmationPage: React.FC = () => {
                               id="nin_slip"
                               type="file"
                               accept=".pdf,image/*"
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const file = e.target.files?.[0];
-                                if (file && file.size > 2 * 1024 * 1024) {
-                                  toast.error('NIN Slip exceeds 2MB limit');
-                                  e.target.value = '';
-                                } else if (file) {
+                                if (!file) return;
+                                const maxBytes = 2 * 1024 * 1024;
+                                if (file.size > maxBytes) {
+                                  toast.info('File exceeds 2MB limit. Auto-compressing to fit...');
+                                  const compressed = await compressFileIfNeeded(file, maxBytes);
+                                  const savedPercent = Math.round((1 - compressed.size / file.size) * 100);
+                                  toast.success(`File compressed by ${savedPercent}% — ready to upload.`);
+                                  setNinSlip(compressed);
+                                  setNinPreview({
+                                    url: URL.createObjectURL(compressed),
+                                    isPdf: compressed.type === 'application/pdf'
+                                  });
+                                } else {
                                   setNinSlip(file);
                                   setNinPreview({
                                     url: URL.createObjectURL(file),
@@ -528,12 +538,21 @@ const DataConfirmationPage: React.FC = () => {
                               id="jamb_letter"
                               type="file"
                               accept=".pdf,image/*"
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const file = e.target.files?.[0];
-                                if (file && file.size > 2 * 1024 * 1024) {
-                                  toast.error('JAMB Letter exceeds 2MB limit');
-                                  e.target.value = '';
-                                } else if (file) {
+                                if (!file) return;
+                                const maxBytes = 2 * 1024 * 1024;
+                                if (file.size > maxBytes) {
+                                  toast.info('File exceeds 2MB limit. Auto-compressing to fit...');
+                                  const compressed = await compressFileIfNeeded(file, maxBytes);
+                                  const savedPercent = Math.round((1 - compressed.size / file.size) * 100);
+                                  toast.success(`File compressed by ${savedPercent}% — ready to upload.`);
+                                  setJambLetter(compressed);
+                                  setJambPreview({
+                                    url: URL.createObjectURL(compressed),
+                                    isPdf: compressed.type === 'application/pdf'
+                                  });
+                                } else {
                                   setJambLetter(file);
                                   setJambPreview({
                                     url: URL.createObjectURL(file),

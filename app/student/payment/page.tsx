@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 import Navbar from '@/components/common/Navbar';
 import Sidebar from '@/components/common/Sidebar';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
