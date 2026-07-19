@@ -21,6 +21,8 @@ import { loginSchema } from '@/utils/validators';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Eye, EyeOff } from 'lucide-react';
 import * as yup from 'yup';
+import { SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
+import { AdminUser } from '@/types/auth.types';
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,13 +39,16 @@ const LoginPage: React.FC = () => {
 
       // Ensure we have a valid response
       if (response && response.userType && response.token) {
-        console.log('Redirecting to:', response.userType === 'student' ? '/student' : '/admin');
-
         // Use replace instead of push to prevent back navigation issues
         if (response.userType === 'student') {
           router.replace('/student');
         } else if (response.userType === 'admin') {
-          router.replace('/admin');
+          const adminUser = response.user as AdminUser;
+          if (adminUser?.id === SUPER_ADMIN_STAFF_ID) {
+            router.replace('/admin');
+          } else {
+            router.replace('/staff');
+          }
         }
       } else {
         console.error('Invalid login response:', response);

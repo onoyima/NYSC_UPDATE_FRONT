@@ -22,6 +22,7 @@ import {
   Shield,
   Calendar,
   MessageSquare,
+  Brain,
   HelpCircle,
   Receipt,
   UserCheck,
@@ -31,7 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { hasPermission, getUserRole } from '@/utils/rolePermissions';
+import { hasPermission, getUserRole, SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
 import { useSession } from '@/contexts/SessionContext';
 import { 
   Select, 
@@ -186,6 +187,29 @@ const adminNavItems: NavItem[] = [
     href: '/admin/settings',
     icon: Settings,
   },
+  {
+    title: 'Nerd',
+    href: '/admin/nerd',
+    icon: Brain,
+  },
+];
+
+const staffNavItems: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/staff',
+    icon: Home,
+  },
+  {
+    title: 'Students',
+    href: '/admin/students-list',
+    icon: Users,
+  },
+  {
+    title: 'Submissions',
+    href: '/admin/submissions',
+    icon: FileText,
+  },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ className }) => {
@@ -207,34 +231,34 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   // Filter admin navigation items based on user permissions
   const getFilteredAdminNavItems = () => {
     if (!user?.id) {
-      console.log('No user ID found');
       return [];
+    }
+
+    // Non-super-admin staff get a limited sidebar
+    if (user.id !== SUPER_ADMIN_STAFF_ID) {
+      return staffNavItems;
     }
     
     const userRole = getUserRole(user.id);
-    console.log('User role:', userRole);
-    console.log('Total admin nav items:', adminNavItems.length);
     
     const filteredItems = adminNavItems.filter(item => {
-      const email = String((user as any)?.email || (user as any)?.p_email || '').toLowerCase();
       switch (item.href) {
         case '/admin':
-          return true; // Dashboard is always visible
+          return true;
         case '/admin/students':
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/students-list':
-          return true; // Temporarily remove permission check for testing
+          return true;
         case '/admin/manage-data':
           return hasPermission(userRole, 'canViewStudentNysc');
         case '/admin/payments':
           return hasPermission(userRole, 'canViewPayments');
         case '/admin/payment-statistics':
-          return hasPermission(userRole, 'canViewPayments') ||
-            email === 'onoyimab@veritas.edu.ng' || email === 'agbudug@veritas.edu.ng';
+          return hasPermission(userRole, 'canViewPayments');
         case '/admin/pending-payments':
           return hasPermission(userRole, 'canViewPayments');
         case '/admin/duplicate-payments':
-          return user.id === 596;
+          return user.id === SUPER_ADMIN_STAFF_ID;
         case '/admin/submissions':
           return hasPermission(userRole, 'canViewTempSubmissions');
         case '/admin/exports':
@@ -259,18 +283,18 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return hasPermission(userRole, 'canManageSystem');
         case '/admin/settings':
           return hasPermission(userRole, 'canManageSystem');
+        case '/admin/nerd':
+          return user.id === SUPER_ADMIN_STAFF_ID;
         default:
           return true;
       }
     });
     
-    console.log('Filtered admin nav items:', filteredItems.length);
-    console.log('Items:', filteredItems.map(item => item.title));
-    
     return filteredItems;
   };
 
   const navItems = userType === 'admin' ? getFilteredAdminNavItems() : studentNavItems;
+  const dashboardHref = userType === 'admin' && user?.id !== SUPER_ADMIN_STAFF_ID ? '/staff' : (userType === 'admin' ? '/admin' : '/student');
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -332,7 +356,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       {/* Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b">
         {!isCollapsed && (
-          <Link href={userType === 'admin' ? '/admin' : '/student'} className="flex items-center space-x-2">
+          <Link href={dashboardHref} className="flex items-center space-x-2">
             <Image 
               src="/logo.png" 
               alt="Logo" 
@@ -344,7 +368,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           </Link>
         )}
         {isCollapsed && (
-          <Link href={userType === 'admin' ? '/admin' : '/student'} className="flex items-center justify-center">
+          <Link href={dashboardHref} className="flex items-center justify-center">
             <Image 
               src="/logo.png" 
               alt="Logo" 

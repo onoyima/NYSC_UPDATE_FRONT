@@ -13,6 +13,7 @@ import { useSidebar } from '@/contexts/SidebarContext';
 import { Moon, Sun, Monitor, LogOut, User, Settings, Bell, Search, Menu, Calendar, RefreshCw } from 'lucide-react';
 import { getInitials } from '@/utils/formatters';
 import adminService from '@/services/admin.service';
+import { SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
 import { toast } from 'sonner';
 
 interface NavbarProps {
@@ -111,7 +112,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Section */}
         <div className="flex items-center gap-2">
-          {userType === 'admin' && (
+          {userType === 'admin' && (user as any)?.id === SUPER_ADMIN_STAFF_ID && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-9">

@@ -779,6 +779,13 @@ class AdminService {
     });
     return response.data;
   }
+
+  async getNerdStudents(search?: string): Promise<any> {
+    const params: any = {};
+    if (search) params.search = search;
+    const response = await axiosInstance.get('/api/nysc/admin/nerd-students', { params });
+    return response.data;
+  }
 }
 
 const adminService = new AdminService();
