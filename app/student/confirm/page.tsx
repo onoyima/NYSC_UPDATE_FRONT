@@ -373,17 +373,6 @@ const DataConfirmationPage: React.FC = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <div>
-                        <Label htmlFor="nin">NIN (11 digits) *</Label>
-                        <Input
-                          id="nin"
-                          value={formData.nin || ''}
-                          onChange={(e) => handleInputChange('nin', e.target.value)}
-                          placeholder="e.g. 12345678901"
-                          maxLength={11}
-                          required
-                        />
-                      </div>
-                      <div>
                         <Label htmlFor="matric_no">Matriculation Number *</Label>
                         <Input
                           id="matric_no"
@@ -414,6 +403,17 @@ const DataConfirmationPage: React.FC = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <div>
+                        <Label htmlFor="nin">NIN (11 digits) *</Label>
+                        <Input
+                          id="nin"
+                          value={formData.nin || ''}
+                          onChange={(e) => handleInputChange('nin', e.target.value)}
+                          placeholder="e.g. 12345678901"
+                          maxLength={11}
+                          required
+                        />
+                      </div>
+                      <div>
                         <Label htmlFor="jamb_no">JAMB Number</Label>
                         <Input
                           id="jamb_no"
@@ -435,14 +435,6 @@ const DataConfirmationPage: React.FC = () => {
                             ))}
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div className="hidden">
-                        <Label htmlFor="level">Current Level</Label>
-                        <Input
-                          id="level"
-                          value={formData.level || ''}
-                          onChange={(e) => handleInputChange('level', e.target.value)}
-                        />
                       </div>
                     </div>
 
