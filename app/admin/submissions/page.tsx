@@ -93,6 +93,26 @@ export default function SubmissionsPage() {
     }
   };
 
+  const handleStatus = async (id: number, status: TempSubmission['submission_status']) => {
+    const confirmMessage =
+      status === 'approved'
+        ? 'Approve this submission and add the student to the verified data list?'
+        : 'Reject this submission? It will be removed from the pending queue.';
+    if (!window.confirm(confirmMessage)) return;
+    try {
+      await axios.put(`/api/nysc/admin/submissions/${id}/status`, { status });
+      toast.success(
+        status === 'approved'
+          ? 'Submission approved and added to the data list'
+          : 'Submission rejected'
+      );
+      setData(prev => prev.filter(item => item.id !== id));
+    } catch (error: any) {
+      console.error('Status update error:', error);
+      toast.error(error?.response?.data?.message || 'Failed to update status');
+    }
+  };
+
   const filtered = data.filter(item => {
     const matchesSearch = Object.values(item).some(val =>
       String(val).toLowerCase().includes(search.toLowerCase())
@@ -296,6 +316,16 @@ export default function SubmissionsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{s.graduation_year}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(s.updated_at)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center space-x-3">
+                         {['pending', 'under_review'].includes(s.submission_status) && (
+                           <>
+                             <button onClick={() => handleStatus(s.id, 'approved')} className="text-emerald-600 hover:text-emerald-800" title="Approve">
+                               <CheckCircleIcon className="w-5 h-5" />
+                             </button>
+                             <button onClick={() => handleStatus(s.id, 'rejected')} className="text-rose-500 hover:text-rose-700" title="Reject">
+                               <XCircleIcon className="w-5 h-5" />
+                             </button>
+                           </>
+                         )}
                          <Link href={`/admin/submissions/${s.id}`} className="text-indigo-600 hover:text-indigo-900" title="View Detail">
                            <EyeIcon className="w-5 h-5" />
                          </Link>

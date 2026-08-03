@@ -118,15 +118,15 @@ const DataConfirmationPage: React.FC = () => {
 
         setFormData(prefilledData);
 
-        // Auto-set graduation_year from the session if not already set
-        // Fetch sessions to find match by session name (year format)
+        // Default the Graduation Session to the latest ACTIVE session (e.g. 2025/2026),
+        // never to the first session in the list or the 'Disabled' entry.
         try {
           const sessRes = await axios.get('/api/nysc/vua-sessions');
           const sessList = sessRes.data.sessions || [];
-          if (sessList.length > 0 && !prefilledData.graduation_year) {
-            // Use the most recent session's name as the graduation year
-            const activeSession = sessList[0];
-            setFormData((prev: any) => ({ ...prev, graduation_year: activeSession.session || activeSession.session_name || activeSession.name || activeSession.year || '' }));
+          const latestActive = sessList.find((s: any) => s.is_active) || sessList[0];
+          if (latestActive) {
+            const sessionName = latestActive.session || latestActive.session_name || latestActive.name || latestActive.year || '';
+            setFormData((prev: any) => ({ ...prev, graduation_year: sessionName }));
           }
         } catch {}
     } catch (error: any) {

@@ -48,6 +48,7 @@ export default function SubmissionDetailPage() {
   const router = useRouter();
   const [submission, setSubmission] = useState<TempSubmission | null>(null);
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -69,13 +70,19 @@ export default function SubmissionDetailPage() {
   }, [id]);
 
   const handleAction = async (status: string) => {
+    setProcessing(status);
     try {
-      // Note: Assuming there's a status update endpoint, if not we'd need to implement it.
-      // For now we just show a toast as a placeholder if endpoint doesn't exist yet.
-      // await axios.post(`/api/nysc/admin/submissions/${id}/status`, { status });
-      toast.info(`Status update to ${status} is coming soon!`);
-    } catch (error) {
-      toast.error('Failed to update status');
+      await axios.put(`/api/nysc/admin/submissions/${id}/status`, { status });
+      toast.success(
+        status === 'approved'
+          ? 'Submission approved and added to the data list'
+          : 'Submission rejected'
+      );
+      setTimeout(() => router.push('/admin/submissions'), 1500);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to update status');
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -150,9 +157,21 @@ export default function SubmissionDetailPage() {
                 Submitted: {new Date(submission.created_at).toLocaleString()}
              </div>
              <div className="flex space-x-3">
-                <button onClick={() => handleAction('rejected')} className="px-6 py-2 bg-white border border-rose-200 text-rose-600 rounded-xl hover:bg-rose-50 transition-colors font-bold text-sm">Reject</button>
-                <button onClick={() => handleAction('approved')} className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-shadow shadow-lg font-bold text-sm">Approve Submission</button>
-             </div>
+                <button
+                  onClick={() => handleAction('rejected')}
+                  disabled={processing !== null || submission.submission_status === 'approved' || submission.submission_status === 'rejected'}
+                  className="px-6 py-2 bg-white border border-rose-200 text-rose-600 rounded-xl hover:bg-rose-50 transition-colors font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {processing === 'rejected' ? 'Rejecting...' : 'Reject'}
+                </button>
+                <button
+                  onClick={() => handleAction('approved')}
+                  disabled={processing !== null || submission.submission_status === 'approved' || submission.submission_status === 'rejected'}
+                  className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-shadow shadow-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {processing === 'approved' ? 'Approving...' : 'Approve Submission'}
+                </button>
+              </div>
           </div>
         </div>
       </div>
