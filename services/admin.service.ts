@@ -319,7 +319,9 @@ class AdminService {
 
   // Session management
   async getSessions(): Promise<{ success: boolean; sessions: any[]; active_session_id?: number }> {
-    const response = await axiosInstance.get('/api/nysc/admin/sessions');
+    const response = await axiosInstance.get('/api/nysc/admin/sessions', {
+      timeout: 60000
+    });
     return response.data;
   }
 
@@ -581,11 +583,16 @@ class AdminService {
   }
 
   // Enhanced student data export
-  async exportStudentNyscData(): Promise<Blob> {
+  async exportStudentNyscData(file?: string): Promise<Blob> {
+    const params: any = {};
+    if (file) {
+      params.file = file;
+    }
     const response = await axiosInstance.get(
       "/api/nysc/admin/docx-import/export-student-data",
       {
         responseType: "blob",
+        params,
       }
     );
     return response.data;
@@ -635,10 +642,46 @@ class AdminService {
     return response.data;
   }
 
-  async applyGraduandsUpdates(updates: any[]) {
-    const response = await axiosInstance.post('/api/nysc/admin/docx-import/graduands-apply', {
-      updates
-    }, {
+  async uploadGraduandsFile(file: File, sessionId: number, graduationDate?: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('session_id', String(sessionId));
+    if (graduationDate) {
+      formData.append('graduation_date', graduationDate);
+    }
+    try {
+      const response = await axiosInstance.post('/api/nysc/admin/docx-import/graduands-upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000 // 2 minutes timeout for file upload
+      });
+      return response.data;
+    } catch (error: any) {
+      const data = error?.response?.data;
+      if (data && typeof data.message === 'string') {
+        throw new Error(data.message);
+      }
+      if (data && data.errors) {
+        const first = Object.values(data.errors)[0];
+        if (Array.isArray(first) && first.length > 0) {
+          throw new Error(first[0]);
+        }
+      }
+      throw error;
+    }
+  }
+  async getGraduandsFiles() {
+    const response = await axiosInstance.get('/api/nysc/admin/docx-import/graduands-files', {
+      timeout: 60000
+    });
+    return response.data;
+  }
+
+  async applyGraduandsUpdates(updates: any[], fileName?: string) {
+    const body: any = { updates };
+    if (fileName) {
+      body.file = fileName;
+    }
+    const response = await axiosInstance.post('/api/nysc/admin/docx-import/graduands-apply', body, {
       timeout: 60000 // 1 minute timeout for database updates
     });
     return response.data;

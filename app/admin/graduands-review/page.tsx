@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/common/Navbar";
@@ -25,6 +25,8 @@ import {
   AlertCircle,
   Clock,
   Users,
+  Upload,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ReviewData, ImportSummary } from "@/types/docx-import.types";
@@ -35,6 +37,9 @@ interface GraduandsFile {
   name: string;
   size: string;
   modified: string;
+  session_id?: number | null;
+  session_name?: string | null;
+  graduation_date?: string | null;
 }
 
 interface GraduandsMatchData {
@@ -79,6 +84,14 @@ const GraduandsReviewPage = () => {
   const [isEnforcePreviewing, setIsEnforcePreviewing] = useState(false);
   const [enforceDetails, setEnforceDetails] = useState<{ not_in_docx?: any[]; updated_to_docx?: any[] } | null>(null);
   const [selectedActions, setSelectedActions] = useState<Record<string, { selected: boolean; action: 'update' | 'nullify'; value?: string }>>({});
+  const [activeTab, setActiveTab] = useState<"review" | "upload">("review");
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [graduandsFiles, setGraduandsFiles] = useState<GraduandsFile[]>([]);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadSessionId, setUploadSessionId] = useState<number | "">("");
+  const [uploadGraduationDate, setUploadGraduationDate] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isLoading) {
@@ -97,8 +110,30 @@ const GraduandsReviewPage = () => {
 
   useEffect(() => {
     if (userType === "admin" && hasPermission("canManageSystem")) {
-      fetchMatches();
+      const loadPage = async () => {
+        // Load lightweight data (sessions + files) first so they are never
+        // blocked behind the slow DOCX matching request.
+        await Promise.allSettled([
+          adminService.getSessions().then((res: any) => {
+            if (res.success) {
+              setSessions(res.sessions || []);
+              if (!uploadSessionId && res.active_session_id) {
+                setUploadSessionId(res.active_session_id);
+              }
+            }
+          }),
+          adminService.getGraduandsFiles().then((res: any) => {
+            if (res.success) {
+              setGraduandsFiles(res.files || []);
+            }
+          }),
+        ]);
+
+        fetchMatches();
+      };
+      loadPage();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userType, hasPermission]);
 
   const fetchMatches = async (fileName?: string) => {
@@ -202,7 +237,7 @@ const GraduandsReviewPage = () => {
         return;
       }
 
-      const result = await adminService.applyGraduandsUpdates(updates);
+      const result = await adminService.applyGraduandsUpdates(updates, selectedFile);
 
       const updateResult = result.result;
       toast.success(
@@ -227,6 +262,48 @@ const GraduandsReviewPage = () => {
 
   const handleBackToImport = () => {
     router.push("/admin/docx-import");
+  };
+
+  const handleUploadGraduands = async () => {
+    if (!uploadFile) {
+      toast.error("Please select a GRADUANDS.docx file to upload");
+      return;
+    }
+    if (!uploadSessionId) {
+      toast.error("Please select the NYSC session this file belongs to");
+      return;
+    }
+    try {
+      setIsUploading(true);
+      const result = await adminService.uploadGraduandsFile(
+        uploadFile,
+        uploadSessionId,
+        uploadGraduationDate || undefined
+      );
+      if (result.success) {
+        toast.success(result.message);
+        setUploadFile(null);
+        setUploadGraduationDate("");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        setGraduandsFiles(result.files || []);
+        if (result.file?.name) {
+          setSelectedFile(result.file.name);
+          setActiveTab("review");
+          fetchMatches(result.file.name);
+        }
+      } else {
+        toast.error(result.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading graduands file:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload graduands file"
+      );
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (isLoading) {
@@ -326,7 +403,7 @@ const GraduandsReviewPage = () => {
                   >
                     Test API
                   </Button>
-                  <NyscExportButton size="sm" variant="outline" />
+                  <NyscExportButton size="sm" variant="outline" file={selectedFile} />
                   <Button
                     onClick={async () => {
                       try {
@@ -387,6 +464,183 @@ const GraduandsReviewPage = () => {
               </div>
             </div>
 
+            {/* Tabs */}
+            <div className="mb-6 border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab("review")}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "review"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Review & Files
+              </button>
+              <button
+                onClick={() => setActiveTab("upload")}
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "upload"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Upload GRADUANDS File
+              </button>
+            </div>
+
+            {activeTab === "upload" ? (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Upload className="h-5 w-5" />
+                      Upload GRADUANDS File
+                    </CardTitle>
+                    <CardDescription>
+                      Upload a GRADUANDS .docx file and tie it to its NYSC
+                      session and graduation date.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-2">
+                          File
+                        </label>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          onChange={(e) =>
+                            setUploadFile(e.target.files?.[0] || null)
+                          }
+                          className="w-full text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-2">
+                          NYSC Session
+                        </label>
+                        <select
+                          value={uploadSessionId}
+                          onChange={(e) =>
+                            setUploadSessionId(
+                              e.target.value ? Number(e.target.value) : ""
+                            )
+                          }
+                          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                        >
+                          <option value="">Select session...</option>
+                          {sessions.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                              {s.is_active ? " (Active)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-2">
+                          Graduation Date (optional)
+                        </label>
+                        <input
+                          type="date"
+                          value={uploadGraduationDate}
+                          onChange={(e) =>
+                            setUploadGraduationDate(e.target.value)
+                          }
+                          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <Button
+                        onClick={handleUploadGraduands}
+                        disabled={isUploading}
+                        size="sm"
+                      >
+                        {isUploading ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload File
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Graduands Files
+                    </CardTitle>
+                    <CardDescription>
+                      Files stored on the server and the session they belong
+                      to.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {graduandsFiles.length === 0 ? (
+                      <p className="text-sm text-gray-500">
+                        No GRADUANDS files found in storage.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {graduandsFiles.map((file) => (
+                          <div
+                            key={file.name}
+                            className="p-4 border rounded-lg"
+                          >
+                            <div className="font-medium">{file.name}</div>
+                            <div className="text-sm text-gray-500">
+                              Size: {file.size}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Session:{" "}
+                              {file.session_name
+                                ? file.session_name +
+                                  (file.session_id
+                                    ? ` (ID ${file.session_id})`
+                                    : "")
+                                : "Not assigned"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Graduation Date: {file.graduation_date || "Not set"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Modified:{" "}
+                              {new Date(file.modified).toLocaleDateString()}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-3 w-full"
+                              disabled={isLoadingData || isProcessing}
+                              onClick={() => {
+                                setSelectedFile(file.name);
+                                setActiveTab("review");
+                                fetchMatches(file.name);
+                              }}
+                            >
+                              <Search className="h-4 w-4 mr-2" />
+                              Scan & Review
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
             {isLoadingData ? (
               <div className="flex items-center justify-center py-12">
                 <LoadingSpinner size="lg" />
@@ -831,6 +1085,8 @@ const GraduandsReviewPage = () => {
                   first.
                 </AlertDescription>
               </Alert>
+            )}
+              </>
             )}
           </div>
         </main>

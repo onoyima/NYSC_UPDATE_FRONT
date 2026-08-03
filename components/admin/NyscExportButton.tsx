@@ -12,13 +12,15 @@ interface NyscExportButtonProps {
   size?: 'default' | 'sm' | 'lg';
   className?: string;
   showCard?: boolean;
+  file?: string;
 }
 
 const NyscExportButton: React.FC<NyscExportButtonProps> = ({
   variant = 'default',
   size = 'default',
   className = '',
-  showCard = false
+  showCard = false,
+  file
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -29,7 +31,7 @@ const NyscExportButton: React.FC<NyscExportButtonProps> = ({
       setExportStatus('idle');
       toast.info('Preparing Excel export...');
 
-      const blob = await adminService.exportStudentNyscData();
+      const blob = await adminService.exportStudentNyscData(file);
       
       // Create download link
       const url = window.URL.createObjectURL(blob);
