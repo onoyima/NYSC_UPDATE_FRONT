@@ -234,11 +234,11 @@ const DataConfirmationPage: React.FC = () => {
 
   return (
     <ProtectedRoute userType="student">
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background overflow-x-hidden">
         <Navbar />
         <Sidebar />
         <div className="flex">
-          <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 pt-28 md:pt-32 pb-24 min-h-screen">
+          <main className="flex-1 min-w-0 ml-0 md:ml-64 p-4 md:p-8 pt-28 md:pt-32 pb-24 min-h-screen">
             <div className="max-w-4xl mx-auto space-y-6 pb-8">
               {/* Header */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -480,7 +480,7 @@ const DataConfirmationPage: React.FC = () => {
                       <div className="space-y-4">
                         <Label htmlFor="nin_slip" className="text-sm font-semibold">NIN Slip (PDF/Image, max 2MB) *</Label>
                         <div className="flex flex-col gap-3">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 w-full min-w-0">
                             <Input
                               id="nin_slip"
                               type="file"
@@ -507,7 +507,7 @@ const DataConfirmationPage: React.FC = () => {
                                   });
                                 }
                               }}
-                              className="bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
+                              className="flex-1 min-w-0 bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
                               required
                             />
                             {ninSlip && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
@@ -533,7 +533,7 @@ const DataConfirmationPage: React.FC = () => {
                       <div className="space-y-4">
                         <Label htmlFor="jamb_letter" className="text-sm font-semibold">JAMB Admission Letter (PDF/Image, max 2MB) *</Label>
                         <div className="flex flex-col gap-3">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 w-full min-w-0">
                             <Input
                               id="jamb_letter"
                               type="file"
@@ -560,7 +560,7 @@ const DataConfirmationPage: React.FC = () => {
                                   });
                                 }
                               }}
-                              className="bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
+                              className="flex-1 min-w-0 bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
                               required
                             />
                             {jambLetter && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
@@ -628,13 +628,13 @@ const DataConfirmationPage: React.FC = () => {
                 </Card>
 
                 {/* Payment Button */}
-                <div className="flex justify-end space-x-4">
-                  <Link href="/student">
-                    <Button type="button" variant="outline">
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:space-x-4">
+                  <Link href="/student" className="w-full sm:w-auto">
+                    <Button type="button" variant="outline" className="w-full sm:w-auto">
                       Cancel
                     </Button>
                   </Link>
-                  <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
+                  <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
                     {isSubmitting ? (
                       <LoadingSpinner size="sm" className="mr-2" />
                     ) : (
