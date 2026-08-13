@@ -133,6 +133,11 @@ class StudentService {
     return response;
   }
 
+  async updateNin(nin: string) {
+    const response = await axiosInstance.put('/api/nysc/student/update-nin', { nin });
+    return response;
+  }
+
   // Get system status for payment information with dynamic settings
   async getSystemStatus(): Promise<SystemStatusWithSettings> {
     try {

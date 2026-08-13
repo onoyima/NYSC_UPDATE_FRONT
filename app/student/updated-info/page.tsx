@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import studentService from '@/services/student.service';
 import { toast } from 'sonner';
 import { User, Mail, Phone, Calendar, MapPin, GraduationCap, CheckCircle, AlertCircle, ArrowLeft, CreditCard, Clock, FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -47,6 +48,7 @@ interface UpdatedStudentInfo {
   cgpa?: number;
   jamb_no?: string;
   study_mode?: string;
+  nin?: string;
   nin_slip?: string | null;
   nin_slip_url?: string | null;
   jamb_admission_letter?: string | null;
@@ -74,6 +76,8 @@ const UpdatedInfoPage: React.FC = () => {
   const [studentInfo, setStudentInfo] = useState<UpdatedStudentInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [ninValue, setNinValue] = useState('');
+  const [isUpdatingNin, setIsUpdatingNin] = useState(false);
 
   useEffect(() => {
     fetchUpdatedStudentInfo();
@@ -83,6 +87,7 @@ const UpdatedInfoPage: React.FC = () => {
     try {
       const response = await studentService.getUpdatedStudentInfo();
       setStudentInfo(response.data.data);
+      setNinValue(response.data.data?.nin || '');
       setError(null);
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to fetch updated student information';
@@ -92,6 +97,26 @@ const UpdatedInfoPage: React.FC = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUpdateNin = async () => {
+    if (!/^\d{11}$/.test(ninValue)) {
+      toast.error('NIN must be exactly 11 digits.');
+      return;
+    }
+
+    setIsUpdatingNin(true);
+    try {
+      const response = await studentService.updateNin(ninValue);
+      const savedNin = response.data?.data?.nin || ninValue;
+      setStudentInfo((prev) => (prev ? { ...prev, nin: savedNin } : prev));
+      setNinValue(savedNin);
+      toast.success('NIN updated successfully.');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update NIN. Please try again.');
+    } finally {
+      setIsUpdatingNin(false);
     }
   };
 
@@ -285,6 +310,29 @@ const UpdatedInfoPage: React.FC = () => {
                           <p className="font-medium capitalize">{studentInfo.marital_status}</p>
                         </div>
                       )}
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium text-muted-foreground">NIN</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Input
+                            value={ninValue}
+                            onChange={(e) => setNinValue(e.target.value.replace(/[^\d]/g, '').slice(0, 11))}
+                            placeholder="e.g. 12345678901"
+                            maxLength={11}
+                            inputMode="numeric"
+                            className="max-w-xs"
+                          />
+                          <Button
+                            onClick={handleUpdateNin}
+                            disabled={isUpdatingNin || !/^\d{11}$/.test(ninValue)}
+                            className="whitespace-nowrap"
+                          >
+                            {isUpdatingNin ? 'Saving...' : 'Update'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Enter your 11-digit NIN and click Update to save it.
+                        </p>
+                      </div>
                     </div>
                     {studentInfo?.address && (
                       <div>
