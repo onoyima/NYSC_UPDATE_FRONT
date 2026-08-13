@@ -12,7 +12,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
 import studentService from '@/services/student.service';
 import { toast } from 'sonner';
-import { User, Mail, Phone, Calendar, MapPin, GraduationCap, CheckCircle, AlertCircle, ArrowLeft, CreditCard, Clock } from 'lucide-react';
+import { User, Mail, Phone, Calendar, MapPin, GraduationCap, CheckCircle, AlertCircle, ArrowLeft, CreditCard, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -47,6 +47,10 @@ interface UpdatedStudentInfo {
   cgpa?: number;
   jamb_no?: string;
   study_mode?: string;
+  nin_slip?: string | null;
+  nin_slip_url?: string | null;
+  jamb_admission_letter?: string | null;
+  jamb_admission_letter_url?: string | null;
   emergency_contact_name?: string | null;
   emergency_contact_phone?: string | null;
   emergency_contact_relationship?: string | null;
@@ -89,6 +93,10 @@ const UpdatedInfoPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const isPdfFile = (url: string) => {
+    return url.split('?')[0].toLowerCase().endsWith('.pdf');
   };
 
   if (isLoading) {
@@ -371,7 +379,80 @@ const UpdatedInfoPage: React.FC = () => {
                   </CardContent>
                 </Card>
 
-
+                {/* Uploaded Documents */}
+                {(studentInfo?.nin_slip_url || studentInfo?.jamb_admission_letter_url) && (
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Uploaded Documents
+                      </CardTitle>
+                      <CardDescription>
+                        The documents you uploaded during your data update.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {studentInfo?.nin_slip_url && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">NIN Slip</label>
+                          <div className="mt-2 p-2 border border-slate-200 rounded-lg bg-slate-50 flex flex-col items-center justify-center min-h-[200px]">
+                            {isPdfFile(studentInfo.nin_slip_url) ? (
+                              <iframe
+                                src={studentInfo.nin_slip_url}
+                                title="NIN Slip"
+                                className="w-full h-64 rounded border border-slate-200"
+                              />
+                            ) : (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={studentInfo.nin_slip_url}
+                                alt="NIN Slip"
+                                className="max-h-64 w-full rounded object-contain shadow-sm"
+                              />
+                            )}
+                          </div>
+                          <a
+                            href={studentInfo.nin_slip_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline mt-2 inline-block"
+                          >
+                            Open NIN Slip
+                          </a>
+                        </div>
+                      )}
+                      {studentInfo?.jamb_admission_letter_url && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">JAMB Admission Letter</label>
+                          <div className="mt-2 p-2 border border-slate-200 rounded-lg bg-slate-50 flex flex-col items-center justify-center min-h-[200px]">
+                            {isPdfFile(studentInfo.jamb_admission_letter_url) ? (
+                              <iframe
+                                src={studentInfo.jamb_admission_letter_url}
+                                title="JAMB Admission Letter"
+                                className="w-full h-64 rounded border border-slate-200"
+                              />
+                            ) : (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={studentInfo.jamb_admission_letter_url}
+                                alt="JAMB Admission Letter"
+                                className="max-h-64 w-full rounded object-contain shadow-sm"
+                              />
+                            )}
+                          </div>
+                          <a
+                            href={studentInfo.jamb_admission_letter_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline mt-2 inline-block"
+                          >
+                            Open JAMB Admission Letter
+                          </a>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Emergency Contact Information */}
                 {(studentInfo?.emergency_contact_name || studentInfo?.emergency_contact_phone) && (
