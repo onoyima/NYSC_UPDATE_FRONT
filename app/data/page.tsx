@@ -213,7 +213,7 @@ export default function AdminDataPage() {
                 <p className="text-xs sm:text-sm text-amber-700 leading-relaxed">
                   Ensure the information you see here is accurate as it will be used to upload your details to the senate list when due. Any errors? Visit the{' '}
                   <a 
-                    href="https://studentupdate.vercel.app/" 
+                    href="https://update.veritas.edu.ng/data" 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-semibold text-indigo-600 hover:text-indigo-800 underline transition-colors duration-200"
