@@ -9,7 +9,7 @@ interface WhatsAppIconProps {
 }
 
 const WhatsAppIcon: React.FC<WhatsAppIconProps> = ({ 
-  url = 'https://wa.me/2348168438930?text=Hello%3BUpdate%20information%20related%3A',
+  url = 'https://wa.me/23481684389230?text=Hello%3BUpdate%20information%20related%3A',
   className = ''
 }) => {
   const handleClick = () => {
