@@ -294,9 +294,9 @@ const CsvExportPage = () => {
                       <h4 className="font-medium mb-2">CSV Column Headers (Exact Database Fields):</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-sm">
                         {[
-                          'matric_no', 'fname', 'mname', 'lname', 'phone', 'state', 
-                          'class_of_degree', 'dob', 'graduation_year', 'gender', 
-                          'marital_status', 'jamb_no', 'course_study', 'study_mode'
+                          'matric_no', 'fname', 'mname', 'lname', 'phone', 'state',
+                          'class_of_degree', 'dob', 'graduation_year', 'status', 'gender',
+                          'marital_status', 'jamb_no', 'is_military', 'course_study', 'study_mode'
                         ].map((header) => (
                           <Badge key={header} variant="outline" className="justify-start">
                             {header}
