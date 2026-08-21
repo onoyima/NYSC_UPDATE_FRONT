@@ -708,16 +708,26 @@ class AdminService {
   }
 
   // CSV Export methods
-  async exportStudentNyscCsv(): Promise<Blob> {
+  async exportStudentNyscCsv(options: { sessionId?: string; dateFrom?: string; dateTo?: string } = {}): Promise<Blob> {
     const response = await axiosInstance.get('/api/nysc/admin/csv-export/student-data', {
+      params: {
+        session_id: options.sessionId,
+        date_from: options.dateFrom,
+        date_to: options.dateTo,
+      },
       responseType: 'blob',
       timeout: 60000 // 1 minute timeout for CSV export
     });
     return response.data;
   }
 
-  async getCsvExportStats() {
+  async getCsvExportStats(options: { sessionId?: string; dateFrom?: string; dateTo?: string } = {}) {
     const response = await axiosInstance.get('/api/nysc/admin/csv-export/stats', {
+      params: {
+        session_id: options.sessionId,
+        date_from: options.dateFrom,
+        date_to: options.dateTo,
+      },
       timeout: 30000 // 30 seconds for stats
     });
     return response.data;

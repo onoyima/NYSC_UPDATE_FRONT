@@ -22,6 +22,12 @@ interface ExportStats {
   completion_percentage: number;
 }
 
+interface SessionOption {
+  id: number;
+  name: string;
+  is_active?: boolean;
+}
+
 const CsvExportPage = () => {
   const { user, userType, hasPermission, isLoading } = useAuth();
   const router = useRouter();
@@ -29,6 +35,16 @@ const CsvExportPage = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [sessions, setSessions] = useState<SessionOption[]>([]);
+  const [sessionId, setSessionId] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const buildFilterOptions = () => ({
+    sessionId: sessionId || undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
 
   useEffect(() => {
     if (!isLoading) {
@@ -49,18 +65,39 @@ const CsvExportPage = () => {
     if (userType === 'admin' && hasPermission('canDownloadData')) {
       fetchStats();
     }
-  }, [userType, hasPermission]);
+  }, [userType, hasPermission, sessionId, dateFrom, dateTo]);
+
+  // Load sessions and default to the admin's selected/active session
+  useEffect(() => {
+    const stored = localStorage.getItem('admin_selected_session_id');
+    if (stored) setSessionId(stored);
+    adminService.getSessions()
+      .then(res => {
+        const list: SessionOption[] = res?.sessions || [];
+        setSessions(list);
+        if (!stored) {
+          const active = list.find(s => s.is_active) || list[0];
+          if (active) setSessionId(String(active.id));
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  // Persist session choice so it matches the rest of the admin area
+  useEffect(() => {
+    if (sessionId) localStorage.setItem('admin_selected_session_id', sessionId);
+  }, [sessionId]);
 
   const fetchStats = async () => {
     try {
       setIsLoadingStats(true);
-      
+
       const token = localStorage.getItem('nysc_token');
       console.log('Token:', token ? 'exists' : 'missing');
-      
-      const result = await adminService.getCsvExportStats();
+
+      const result = await adminService.getCsvExportStats(buildFilterOptions());
       setStats(result.stats);
-      
+
       console.log('Stats loaded successfully');
 
       // Stats are already set above
@@ -79,7 +116,7 @@ const CsvExportPage = () => {
       setExportStatus('idle');
       toast.info('Preparing CSV export...');
 
-      const blob = await adminService.exportStudentNyscCsv();
+      const blob = await adminService.exportStudentNyscCsv(buildFilterOptions());
 
       // Blob is already available
       
@@ -206,6 +243,52 @@ const CsvExportPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {/* Session & Date Range Filters */}
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h4 className="font-medium mb-3">Filters:</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Session</label>
+                          <select
+                            value={sessionId}
+                            onChange={e => setSessionId(e.target.value)}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="">All Sessions</option>
+                            {sessions.map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">From (Updated At)</label>
+                          <input
+                            type="date"
+                            value={dateFrom}
+                            onChange={e => setDateFrom(e.target.value)}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">To (Updated At)</label>
+                          <input
+                            type="date"
+                            value={dateTo}
+                            onChange={e => setDateTo(e.target.value)}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+                      {(sessionId || dateFrom || dateTo) && (
+                        <button
+                          onClick={() => { setSessionId(''); setDateFrom(''); setDateTo(''); }}
+                          className="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-800 underline"
+                        >
+                          Reset filters
+                        </button>
+                      )}
+                    </div>
+
                     {/* Column Headers Info */}
                     <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                       <h4 className="font-medium mb-2">CSV Column Headers (Exact Database Fields):</h4>
