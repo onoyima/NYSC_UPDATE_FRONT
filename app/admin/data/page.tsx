@@ -45,12 +45,22 @@ const formatTitleCase = (str: string | null | undefined): string => {
   return String(str).toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 };
 
+interface SessionOption {
+  id: number;
+  name: string;
+  is_active?: boolean;
+}
+
 export default function AdminDataPage() {
   const { isAuthenticated, userType } = useAuth();
   const [data, setData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: keyof StudentData; direction: 'asc' | 'desc' } | null>(null);
+  const [sessions, setSessions] = useState<SessionOption[]>([]);
+  const [sessionId, setSessionId] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,14 +69,38 @@ export default function AdminDataPage() {
   // Check if user is admin for download permissions
   const isAdmin = isAuthenticated && userType === 'admin';
 
+  const buildFilterParams = () => {
+    const params: Record<string, string> = {};
+    if (sessionId) params.session_id = sessionId;
+    if (dateFrom) params.date_from = dateFrom;
+    if (dateTo) params.date_to = dateTo;
+    return params;
+  };
+
   useEffect(() => {
-    axios.get('/api/nysc')
+    axios.get('/api/nysc', { params: buildFilterParams() })
       .then(res => {
         const responseData = res.data?.data || res.data;
         setData(Array.isArray(responseData) ? responseData : []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+  }, [sessionId, dateFrom, dateTo]);
+
+  // Load sessions so downloads can be scoped to a session
+  useEffect(() => {
+    const stored = localStorage.getItem('admin_selected_session_id');
+    if (stored) setSessionId(stored);
+    axios.get('/api/nysc/admin/sessions')
+      .then(res => {
+        const list: SessionOption[] = res.data?.sessions || [];
+        setSessions(list);
+        if (!stored) {
+          const active = list.find(s => s.is_active) || list[0];
+          if (active) setSessionId(String(active.id));
+        }
+      })
+      .catch(console.error);
   }, []);
 
   const filtered = data.filter(item =>
@@ -101,7 +135,7 @@ export default function AdminDataPage() {
 
   const handleDownload = async (fmt: 'csv' | 'xlsx' | 'pdf') => {
     try {
-      const resp = await axios.get(`/api/nysc/exports/${fmt}`, { responseType: 'blob' });
+      const resp = await axios.get(`/api/nysc/export/${fmt}`, { params: buildFilterParams(), responseType: 'blob' });
       const filename = `nysc_data_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.${fmt}`;
       saveAs(resp.data, filename);
     } catch (e) {
@@ -245,6 +279,49 @@ export default function AdminDataPage() {
                 <p className="mt-2 text-sm text-gray-600">
                   Showing {sorted.length} of {data.length} students
                 </p>
+              )}
+            </div>
+
+            {/* Session & Date Range Filters - applies to table and downloads */}
+            <div className="mb-6 flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 sm:p-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500">Session:</span>
+                <select
+                  value={sessionId}
+                  onChange={e => setSessionId(e.target.value)}
+                  className="bg-white border border-gray-300 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 shadow-sm"
+                >
+                  <option value="">All Sessions</option>
+                  {sessions.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500">From:</span>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={e => setDateFrom(e.target.value)}
+                  className="bg-white border border-gray-300 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 shadow-sm"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500">To:</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={e => setDateTo(e.target.value)}
+                  className="bg-white border border-gray-300 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 shadow-sm"
+                />
+              </div>
+              {(sessionId || dateFrom || dateTo) && (
+                <button
+                  onClick={() => { setSessionId(''); setDateFrom(''); setDateTo(''); }}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-800 underline transition-colors duration-200"
+                >
+                  Reset
+                </button>
               )}
             </div>
 
