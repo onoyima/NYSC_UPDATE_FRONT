@@ -172,7 +172,7 @@ const GraduandsReviewPage = () => {
 
       if (errorMessage.includes("timeout")) {
         toast.error(
-          "Processing timeout - GRADUANDS.docx file might be too large. Please try again or contact support."
+          "Processing timeout - the GRADUANDS file might be too large. Please try again or contact support."
         );
       } else {
         toast.error("Failed to load matches: " + errorMessage);
@@ -266,7 +266,7 @@ const GraduandsReviewPage = () => {
 
   const handleUploadGraduands = async () => {
     if (!uploadFile) {
-      toast.error("Please select a GRADUANDS.docx file to upload");
+      toast.error("Please select a GRADUANDS .docx or .csv file to upload");
       return;
     }
     if (!uploadSessionId) {
@@ -497,8 +497,9 @@ const GraduandsReviewPage = () => {
                       Upload GRADUANDS File
                     </CardTitle>
                     <CardDescription>
-                      Upload a GRADUANDS .docx file and tie it to its NYSC
-                      session and graduation date.
+                      Upload a GRADUANDS .docx or .csv file (with MATRIC_NO and
+                      CLASS_OF_DEGREE columns) and tie it to its NYSC session
+                      and graduation date.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -510,7 +511,7 @@ const GraduandsReviewPage = () => {
                         <input
                           ref={fileInputRef}
                           type="file"
-                          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          accept=".docx,.csv,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv"
                           onChange={(e) =>
                             setUploadFile(e.target.files?.[0] || null)
                           }

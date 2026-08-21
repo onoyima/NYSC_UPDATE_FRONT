@@ -44,6 +44,8 @@ const DataConfirmationPage: React.FC = () => {
   const [jambLetter, setJambLetter] = useState<File | null>(null);
   const [ninPreview, setNinPreview] = useState<{url: string, isPdf: boolean} | null>(null);
   const [jambPreview, setJambPreview] = useState<{url: string, isPdf: boolean} | null>(null);
+  const [existingDocs, setExistingDocs] = useState<{nin: {url: string, isPdf: boolean} | null, jamb: {url: string, isPdf: boolean} | null}>({nin: null, jamb: null});
+  const [originalValues, setOriginalValues] = useState<any>(null);
 
   useEffect(() => {
     fetchStudentDetails();
@@ -76,8 +78,10 @@ const DataConfirmationPage: React.FC = () => {
 
       setStudentDetails(response.data);
 
-      // Pre-fill form ONLY from student, academic, and contact tables (NOT from student_nysc)
+      // Pre-fill from what the student last submitted (nysc/temp record) when it
+      // exists, falling back to the SIS student/academic tables for anything missing.
       const data = response.data;
+      const n = data.nysc || {};
 
 
 
@@ -86,37 +90,56 @@ const DataConfirmationPage: React.FC = () => {
           return (value && value !== 'Not provided') ? value : '';
         };
 
+        // Dates may arrive as ISO strings with time components - keep YYYY-MM-DD only
+        const getDateValue = (value: any) => {
+          const v = getValue(value);
+          return v ? String(v).slice(0, 10) : '';
+        };
+
         const prefilledData = {
-          // Personal Information - from student table
-          fname: getValue(data.student?.fname),
-          mname: getValue(data.student?.mname),
-          lname: getValue(data.student?.lname),
-          gender: getValue(data.student?.gender),
-          dob: getValue(data.student?.dob),
-          marital_status: getValue(data.student?.marital_status),
-          state: getValue(data.student?.state),
+          // Personal Information - prefer submitted values over SIS records
+          fname: getValue(n.fname) || getValue(data.student?.fname),
+          mname: getValue(n.mname) || getValue(data.student?.mname),
+          lname: getValue(n.lname) || getValue(data.student?.lname),
+          gender: getValue(n.gender) || getValue(data.student?.gender),
+          dob: getDateValue(n.dob) || getDateValue(data.student?.dob),
+          marital_status: getValue(n.marital_status) || getValue(data.student?.marital_status),
+          state: getValue(n.state) || getValue(data.student?.state),
 
-          // Contact Information - from student table
-          phone: getValue(data.student?.phone),
-          username: getValue(data.student?.username),
-          address: getValue(data.student?.address),
-          lga: getValue(data.student?.lga),
+          // Contact Information - prefer submitted values over SIS records
+          phone: getValue(n.phone) || getValue(data.student?.phone),
+          username: getValue(n.email) || getValue(data.student?.username),
+          address: getValue(n.address) || getValue(data.student?.address),
+          lga: getValue(n.lga) || getValue(data.student?.lga),
 
-          // Academic Information - from academic table
+          // Academic Information - matric/department/level stay authoritative from SIS,
+          // the rest prefer what the student submitted
           matric_no: getValue(data.academic?.matric_no),
           department: getValue(typeof data.academic?.department === 'object' ? data.academic?.department?.name : data.academic?.department),
-          course_study: getValue(data.academic?.course_study),
-          nin: getValue(data.nysc?.nin),
+          course_study: getValue(n.course_of_study) || getValue(data.academic?.course_study),
+          nin: getValue(n.nin),
 
-          jamb_no: getValue(data.academic?.jamb_no),
-          study_mode: getValue(data.academic?.study_mode),
+          jamb_no: getValue(n.jamb_no) || getValue(data.academic?.jamb_no),
+          study_mode: getValue(n.study_mode) || getValue(data.academic?.study_mode),
           level: getValue(data.academic?.level),
           graduation_year: getValue(data.academic?.graduation_year),
-          cgpa: getValue(data.academic?.cgpa)
+          cgpa: getValue(n.cgpa) || getValue(data.academic?.cgpa)
 
         };
 
         setFormData(prefilledData);
+        // Snapshot of the loaded values - used to detect what the student changed
+        setOriginalValues(prefilledData);
+
+        // Show previously uploaded documents so they don't have to re-upload
+        const toPreview = (path: any) => {
+          if (!path) return null;
+          return { url: path, isPdf: String(path).toLowerCase().endsWith('.pdf') };
+        };
+        setExistingDocs({
+          nin: toPreview(n.nin_slip_url),
+          jamb: toPreview(n.jamb_admission_letter_url)
+        });
 
         // Default the Graduation Session to the latest ACTIVE session (e.g. 2025/2026),
         // never to the first session in the list or the 'Disabled' entry.
@@ -127,6 +150,9 @@ const DataConfirmationPage: React.FC = () => {
           if (latestActive) {
             const sessionName = latestActive.session || latestActive.session_name || latestActive.name || latestActive.year || '';
             setFormData((prev: any) => ({ ...prev, graduation_year: sessionName }));
+            // Keep the snapshot in sync so the auto-filled session isn't
+            // mistaken for a user-made change by the diff detection below
+            setOriginalValues((prev: any) => (prev ? { ...prev, graduation_year: sessionName } : prev));
           }
         } catch {}
     } catch (error: any) {
@@ -162,7 +188,47 @@ const DataConfirmationPage: React.FC = () => {
         return;
       }
 
-      if (!ninSlip || !jambLetter) {
+      // Detect what changed relative to the loaded record
+      const trackedFields = [
+        'fname', 'mname', 'lname', 'gender', 'dob', 'marital_status', 'state', 'lga',
+        'phone', 'username', 'address', 'matric_no', 'department', 'course_study',
+        'jamb_no', 'study_mode', 'level', 'graduation_year', 'cgpa'
+      ];
+      const norm = (v: any) => String(v ?? '').trim();
+      const hasLoadedRecord = !!(studentDetails?.is_submitted && studentDetails?.is_paid && originalValues);
+      const otherFieldsChanged = hasLoadedRecord && trackedFields.some(f => norm(formData[f]) !== norm(originalValues[f]));
+      const docsReplaced = !!(ninSlip || jambLetter);
+      const ninChanged = hasLoadedRecord && norm(formData.nin) !== norm(originalValues.nin);
+
+      // Free NIN-only update: submitted+paid students changing nothing but the NIN
+      // are updated instantly without a new payment cycle.
+      if (hasLoadedRecord && !otherFieldsChanged && !docsReplaced && ninChanged) {
+        const ninVal = norm(formData.nin);
+        if (!/^\d{11}$/.test(ninVal)) {
+          toast.error('NIN must be exactly 11 digits.');
+          setIsSubmitting(false);
+          return;
+        }
+        try {
+          await axios.put('/api/nysc/student/update-nin', { nin: ninVal });
+          toast.success('NIN updated successfully. No payment was required.');
+          setOriginalValues((prev: any) => ({ ...prev, nin: ninVal }));
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || 'Failed to update NIN');
+        } finally {
+          setIsSubmitting(false);
+        }
+        return;
+      }
+
+      if (hasLoadedRecord && !otherFieldsChanged && !docsReplaced && !ninChanged) {
+        toast.info('No changes detected. Update your details or your NIN to proceed.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Documents are only required when none exist on file yet (first-time submission)
+      if ((!ninSlip && !existingDocs.nin) || (!jambLetter && !existingDocs.jamb)) {
         toast.error('NIN Slip and JAMB Admission Letter are required.');
         setIsSubmitting(false);
         return;
@@ -185,13 +251,18 @@ const DataConfirmationPage: React.FC = () => {
         payment_amount: systemStatus.current_fee // Use dynamic payment amount from admin settings
       };
 
-      // Use FormData for file uploads
+      // Use FormData for file uploads - only attach newly selected files;
+      // the backend reuses existing documents when none are provided
       const dataToSend = new FormData();
       Object.keys(confirmData).forEach(key => {
         dataToSend.append(key, confirmData[key]);
       });
-      dataToSend.append('nin_slip', ninSlip || '');
-      dataToSend.append('jamb_admission_letter', jambLetter || '');
+      if (ninSlip) {
+        dataToSend.append('nin_slip', ninSlip);
+      }
+      if (jambLetter) {
+        dataToSend.append('jamb_admission_letter', jambLetter);
+      }
 
       // Call confirmDetails API to save data to database
       const response = await axios.post('/api/nysc/student/confirm', dataToSend, {
@@ -265,7 +336,8 @@ const DataConfirmationPage: React.FC = () => {
                       <div>
                         <h3 className="font-semibold text-blue-800">Data Update</h3>
                         <p className="text-blue-700 text-sm">
-                          You have previously submitted your data. You can make changes and submit again, but each update requires a new payment.
+                          You have previously submitted your data. Your NIN can be updated for free — any other change
+                          (or document replacement) requires a new payment.
                         </p>
                       </div>
                     </div>
@@ -280,7 +352,7 @@ const DataConfirmationPage: React.FC = () => {
                     <div>
                       <h3 className="font-semibold text-yellow-800">Payment Required</h3>
                       <p className="text-yellow-700 text-sm">
-                        Each data confirmation requires payment. Please ensure all information is correct before proceeding to payment.
+                        Submitting new details or replacing a document requires payment. NIN-only updates are free. Please ensure all information is correct before proceeding to payment.
                       </p>
                     </div>
                   </div>
@@ -508,11 +580,11 @@ const DataConfirmationPage: React.FC = () => {
                                 }
                               }}
                               className="flex-1 min-w-0 bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
-                              required
+                              required={!existingDocs.nin}
                             />
-                            {ninSlip && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
+                            {(ninSlip || existingDocs.nin) && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
                           </div>
-                          
+
                           {ninPreview && (
                             <div className="p-2 border border-slate-200 rounded-lg bg-slate-50 flex flex-col items-center justify-center min-h-[120px]">
                               {ninPreview.isPdf ? (
@@ -524,6 +596,23 @@ const DataConfirmationPage: React.FC = () => {
                                 </div>
                               ) : (
                                 <img src={ninPreview.url} alt="NIN Preview" className="max-h-48 rounded object-contain shadow-sm" />
+                              )}
+                            </div>
+                          )}
+
+                          {!ninPreview && existingDocs.nin && (
+                            <div className="p-2 border border-emerald-200 rounded-lg bg-emerald-50 flex flex-col items-center justify-center min-h-[120px]">
+                              {existingDocs.nin.isPdf ? (
+                                <div className="flex flex-col items-center p-2">
+                                  <CheckCircle className="w-12 h-12 text-emerald-600 mb-2" />
+                                  <span className="text-sm font-medium text-slate-700">NIN Slip already on file (PDF)</span>
+                                  <a href={existingDocs.nin.url} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 underline mt-1">View document</a>
+                                </div>
+                              ) : (
+                                <>
+                                  <img src={existingDocs.nin.url} alt="Uploaded NIN Slip" className="max-h-48 rounded object-contain shadow-sm" />
+                                  <span className="text-xs text-emerald-700 mt-1">Currently uploaded — select a new file only to replace it</span>
+                                </>
                               )}
                             </div>
                           )}
@@ -561,9 +650,9 @@ const DataConfirmationPage: React.FC = () => {
                                 }
                               }}
                               className="flex-1 min-w-0 bg-white border-slate-300 text-slate-900 cursor-pointer file:cursor-pointer file:bg-indigo-50 file:text-indigo-700 file:border-0 file:rounded-md file:px-4 file:font-semibold hover:file:bg-indigo-100 transition-colors"
-                              required
+                              required={!existingDocs.jamb}
                             />
-                            {jambLetter && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
+                            {(jambLetter || existingDocs.jamb) && <CheckCircle className="h-6 w-6 text-emerald-500 shrink-0" />}
                           </div>
 
                           {jambPreview && (
@@ -577,6 +666,23 @@ const DataConfirmationPage: React.FC = () => {
                                 </div>
                               ) : (
                                 <img src={jambPreview.url} alt="JAMB Preview" className="max-h-48 rounded object-contain shadow-sm" />
+                              )}
+                            </div>
+                          )}
+
+                          {!jambPreview && existingDocs.jamb && (
+                            <div className="p-2 border border-emerald-200 rounded-lg bg-emerald-50 flex flex-col items-center justify-center min-h-[120px]">
+                              {existingDocs.jamb.isPdf ? (
+                                <div className="flex flex-col items-center p-2">
+                                  <CheckCircle className="w-12 h-12 text-emerald-600 mb-2" />
+                                  <span className="text-sm font-medium text-slate-700">JAMB Letter already on file (PDF)</span>
+                                  <a href={existingDocs.jamb.url} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 underline mt-1">View document</a>
+                                </div>
+                              ) : (
+                                <>
+                                  <img src={existingDocs.jamb.url} alt="Uploaded JAMB Letter" className="max-h-48 rounded object-contain shadow-sm" />
+                                  <span className="text-xs text-emerald-700 mt-1">Currently uploaded — select a new file only to replace it</span>
+                                </>
                               )}
                             </div>
                           )}
