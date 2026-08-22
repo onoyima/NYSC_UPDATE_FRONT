@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from '@/utils/axios';
 import { saveAs } from 'file-saver';
-import { ExclamationTriangleIcon, MagnifyingGlassIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
 
 interface StudentData {
   id: number;
@@ -44,7 +45,8 @@ interface SessionOption {
 }
 
 export default function AdminDataPage() {
-  const { isAuthenticated, userType } = useAuth();
+  const { isAuthenticated, userType, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<StudentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -67,11 +69,23 @@ export default function AdminDataPage() {
   };
 
   useEffect(() => {
+    // Wait for the auth state to resolve, then require a login:
+    // guests are redirected and students receive only their own record.
+    if (isAuthLoading) return;
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
     axios.get('/api/nysc', { params: buildFilterParams() })
       .then(res => setData(res.data.data))
-      .catch(console.error)
+      .catch((err) => {
+        console.error(err);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          router.push('/login');
+        }
+      })
       .finally(() => setLoading(false));
-  }, [sessionId, dateFrom, dateTo]);
+  }, [sessionId, dateFrom, dateTo, isAuthLoading, isAuthenticated]);
 
   // Load sessions for admins so downloads can be scoped to a session
   useEffect(() => {
@@ -156,7 +170,7 @@ export default function AdminDataPage() {
     }
   };
 
-  if (loading) {
+  if (loading || isAuthLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
@@ -245,33 +259,6 @@ export default function AdminDataPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Warning Card - Full width on mobile, sidebar on desktop */}
-        <div className="mb-6">
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 sm:p-6 shadow-lg">
-            <div className="flex items-start space-x-2 sm:space-x-3">
-              <ExclamationTriangleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-amber-800 mb-2">Important Notice</h3>
-                <p className="text-xs sm:text-sm text-amber-700 leading-relaxed">
-                  Ensure the information you see here is accurate as it will be used to upload your details to the senate list when due. Any errors? Visit the{' '}
-                  <a 
-                    href="https://update.veritas.edu.ng/data" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-indigo-600 hover:text-indigo-800 underline transition-colors duration-200"
-                  >
-                    Student Update System
-                  </a>
-                  {' '}to update your details to match your NIN, JAMB, and school portal records.
-                </p>
-                <p className="text-xs text-amber-600 mt-2 font-medium">
-                  Only the details shown on this page will be used.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main Content */}
         <div>
             {/* Search Input */}
