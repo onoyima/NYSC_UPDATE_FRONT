@@ -406,6 +406,12 @@ const UpdatedInfoPage: React.FC = () => {
                         <p className="font-medium">{studentInfo?.graduation_year || studentInfo?.year_of_graduation}</p>
                       </div>
                     )}
+                    {studentInfo?.degree_class && studentInfo.degree_class !== 'Not Specified' && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Class of Degree</label>
+                        <p className="font-medium">{studentInfo.degree_class}</p>
+                      </div>
+                    )}
                     {studentInfo?.cgpa && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">CGPA</label>
