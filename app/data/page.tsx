@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from '@/utils/axios';
 import { saveAs } from 'file-saver';
-import { MagnifyingGlassIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, ArrowDownTrayIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
@@ -199,6 +199,17 @@ export default function AdminDataPage() {
                   <p className="text-xs sm:text-sm text-gray-600">Student Information Management</p>
                 </div>
               </div>
+            </div>
+
+            {/* Back to Home */}
+            <div className="flex items-center">
+              <button
+                onClick={() => router.push(isAdmin ? '/admin' : '/student')}
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200 shadow-md hover:shadow-lg"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                {isAdmin ? 'Admin Home' : 'My Dashboard'}
+              </button>
             </div>
             
             {/* Desktop Download Buttons - Only for Admin Users */}
@@ -408,7 +419,7 @@ export default function AdminDataPage() {
                                   <span className="text-gray-400 italic">Not set</span>
                                 )}
                               </td>
-                              <td className="px-1 py-2 text-xs text-gray-700">{isAdmin ? formatDate(s.dob) : '**/**/****'}</td>
+                              <td className="px-1 py-2 text-xs text-gray-700">{formatDate(s.dob)}</td>
                               <td className="px-1 py-2 text-xs text-gray-700">{s.graduation_year}</td>
                               <td className="px-1 py-2 text-xs">
                                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
@@ -558,7 +569,7 @@ export default function AdminDataPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {isAdmin ? formatDate(s.dob) : '**/**/****'}
+                            {formatDate(s.dob)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {s.graduation_year}
