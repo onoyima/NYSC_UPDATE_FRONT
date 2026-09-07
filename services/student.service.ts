@@ -112,6 +112,31 @@ class StudentService {
     return response.data;
   }
 
+  // Nerd-only self-service: check/complete the student's nerd record.
+  // Never touches student_nysc, payments or any other table.
+  async getNerdDetails() {
+    const response = await axiosInstance.get('/api/nysc/student/nerd-details');
+    return response.data;
+  }
+
+  async updateNerdDetails(fields: Record<string, any>) {
+    const response = await axiosInstance.put('/api/nysc/student/nerd-details', fields);
+    return response.data;
+  }
+
+  // Canonical Nigeria locations for confirm/nerd-details dropdowns.
+  async getStates() {
+    const response = await axiosInstance.get('/api/nysc/locations/states');
+    return response.data;
+  }
+
+  async getLgas(state: string) {
+    const response = await axiosInstance.get('/api/nysc/locations/lgas', {
+      params: { state },
+    });
+    return response.data;
+  }
+
   async getAnalytics() {
     const response = await axiosInstance.get('/api/nysc/student/analytics');
     return response.data;

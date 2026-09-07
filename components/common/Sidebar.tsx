@@ -29,7 +29,8 @@ import {
   Download,
   AlertTriangle,
   Scale,
-  Clock
+  Clock,
+  ClipboardCheck
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -84,6 +85,11 @@ const studentNavItems: NavItem[] = [
     title: 'Updated Info',
     href: '/student/updated-info',
     icon: UserCheck,
+  },
+  {
+    title: 'Nerd Details',
+    href: '/student/nerd-details',
+    icon: ClipboardCheck,
   },
 ];
 

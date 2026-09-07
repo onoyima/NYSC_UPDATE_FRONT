@@ -38,6 +38,7 @@ import Link from 'next/link';
 
 interface MaintenanceSettings {
   maintenance_mode: boolean;
+  nerd_details_enabled: boolean;
 }
 
 interface PaymentSettings {
@@ -73,7 +74,7 @@ const AdminSettingsPage: React.FC = () => {
         adminSettingsService.getSettings(),
         adminService.getSessions()
       ]);
-      setMaintenanceSettings({ maintenance_mode: systemResponse.data?.maintenance_mode || false });
+      setMaintenanceSettings({ maintenance_mode: systemResponse.data?.maintenance_mode || false, nerd_details_enabled: systemResponse.data?.nerd_details_enabled ?? true });
       setPaymentSettings(paymentResponse);
       setSessions(sessionsResponse.sessions || []);
       setActiveSessionId(sessionsResponse.active_session_id);
@@ -459,6 +460,21 @@ const AdminSettingsPage: React.FC = () => {
                           </AlertDescription>
                         </Alert>
                       )}
+
+                      <Separator />
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Nerd Details Update</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Allow students to verify and complete their nerd records
+                          </p>
+                        </div>
+                        <Switch
+                          checked={maintenanceSettings?.nerd_details_enabled ?? true}
+                          onCheckedChange={(checked) => updateMaintenanceSetting('nerd_details_enabled', checked)}
+                        />
+                      </div>
 
                       <Separator />
 

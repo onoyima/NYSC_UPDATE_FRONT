@@ -134,20 +134,23 @@ const NerdPage: React.FC = () => {
     return String(val);
   };
 
-  const exportCSV = () => {
-    const headers = FIELDS.map(f => f.label);
-    const rows = students.map(s =>
-      FIELDS.map(f => `"${getFieldValue(s, f.key).replace(/"/g, '""')}"`)
-    );
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `nerd_records_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('CSV exported successfully');
+  const exportExcel = async (format: 'excel' | 'csv') => {
+    try {
+      setIsLoadingData(true);
+      const blob = await adminService.exportNerdStudents(search || undefined, format);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nerd_records_${new Date().toISOString().split('T')[0]}.${format === 'csv' ? 'csv' : 'xlsx'}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(format === 'csv' ? 'CSV exported successfully' : 'Excel exported successfully');
+    } catch (error: any) {
+      console.error('Nerd export error:', error);
+      toast.error(error?.response?.data?.message || 'Failed to export nerd records');
+    } finally {
+      setIsLoadingData(false);
+    }
   };
 
   if (isLoading) {
@@ -182,9 +185,13 @@ const NerdPage: React.FC = () => {
                   <Badge variant="outline" className="text-xs">
                     {students.length} records
                   </Badge>
-                  <Button variant="outline" size="sm" onClick={exportCSV}>
+                  <Button variant="outline" size="sm" onClick={() => exportExcel('csv')}>
                     <Download className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">Export CSV</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => exportExcel('excel')}>
+                    <Download className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Export Excel</span>
                   </Button>
                 </div>
               </div>

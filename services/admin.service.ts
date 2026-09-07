@@ -840,6 +840,18 @@ class AdminService {
     return response.data;
   }
 
+  // Excel-safe export of nerd records (exact column order, sanitized values).
+  async exportNerdStudents(search?: string, format: 'excel' | 'csv' = 'excel'): Promise<Blob> {
+    const params: any = { format };
+    if (search) params.search = search;
+    const response = await axiosInstance.get('/api/nysc/admin/nerd-students/export', {
+      params,
+      responseType: 'blob',
+      timeout: 120000,
+    });
+    return response.data;
+  }
+
   // Nerd review methods (reconcile CGPA, class of degree, graduation date/session)
   async getNerdReviewMatches(fileName?: string) {
     const params = fileName ? { file: fileName } : {};

@@ -27,7 +27,8 @@ import {
   TrendingUp,
   DollarSign,
   Users,
-  Activity
+  Activity,
+  ClipboardCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -345,6 +346,21 @@ const StudentDashboard: React.FC = () => {
                           <p className="font-medium">Make Payment</p>
                           <p className="text-xs text-muted-foreground">
                             {student.paymentStatus === 'completed' ? 'Payment completed' : 'Pay update fee'}
+                          </p>
+                        </div>
+                      </Button>
+                    </Link>
+
+                    <Link href="/student/nerd-details">
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-auto p-4 flex flex-col items-center gap-2"
+                      >
+                        <ClipboardCheck className="h-6 w-6" />
+                        <div className="text-center">
+                          <p className="font-medium">Nerd Details</p>
+                          <p className="text-xs text-muted-foreground">
+                            Check your nerd record completeness
                           </p>
                         </div>
                       </Button>

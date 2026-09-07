@@ -47,11 +47,15 @@ const DataConfirmationPage: React.FC = () => {
   const [existingDocs, setExistingDocs] = useState<{nin: {url: string, isPdf: boolean} | null, jamb: {url: string, isPdf: boolean} | null}>({nin: null, jamb: null});
   const [originalValues, setOriginalValues] = useState<any>(null);
   const [jambTouched, setJambTouched] = useState(false);
+  const [states, setStates] = useState<string[]>([]);
+  const [lgas, setLgas] = useState<string[]>([]);
+  const [loadingLgas, setLoadingLgas] = useState(false);
 
   useEffect(() => {
     fetchStudentDetails();
     fetchStudyModes();
     fetchSessions();
+    fetchStates();
   }, []);
 
   const fetchSessions = async () => {
@@ -72,6 +76,60 @@ const DataConfirmationPage: React.FC = () => {
       toast.error('Failed to load study modes');
     }
   };
+
+  const normalizeStateKey = (value: any) => String(value || '').toLowerCase().replace(/[^a-z]+/g, '');
+
+  const matchCanonicalState = (value: any) => {
+    const key = normalizeStateKey(value);
+    if (!key) return '';
+    return states.find((s) => normalizeStateKey(s) === key) || '';
+  };
+
+  const fetchStates = async () => {
+    try {
+      const response = await studentService.getStates();
+      setStates(response.states || []);
+    } catch (error) {
+      console.error('Error fetching states:', error);
+    }
+  };
+
+  const fetchLgas = async (state: string) => {
+    const canonical = matchCanonicalState(state);
+    if (!canonical) {
+      setLgas([]);
+      return;
+    }
+    setLoadingLgas(true);
+    try {
+      const response = await studentService.getLgas(canonical);
+      setLgas(response.lgas || []);
+    } catch (error) {
+      console.error('Error fetching LGAs:', error);
+      setLgas([]);
+    } finally {
+      setLoadingLgas(false);
+    }
+  };
+
+  const handleStateChange = (value: string) => {
+    handleInputChange('state', value);
+    handleInputChange('lga', '');
+    fetchLgas(value);
+  };
+
+  // Once the canonical state list is loaded, sync any pre-filled state value
+  // (from the submitted/SIS record) and load its LGAs.
+  useEffect(() => {
+    if (states.length === 0 || !formData.state) return;
+    const canonical = matchCanonicalState(formData.state);
+    if (canonical && canonical !== formData.state) {
+      handleInputChange('state', canonical);
+    }
+    if (canonical) {
+      fetchLgas(canonical);
+    }
+  }, [states]);
 
   const fetchStudentDetails = async () => {
     try {
@@ -528,22 +586,37 @@ const DataConfirmationPage: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="lga">Local Government Area *</Label>
-                        <Input
-                          id="lga"
+                        <Select
                           value={formData.lga || ''}
-                          onChange={(e) => handleInputChange('lga', e.target.value)}
-                          required
-                        />
+                          onValueChange={(value) => handleInputChange('lga', value)}
+                          disabled={!formData.state}
+                        >
+                          <SelectTrigger id="lga">
+                            <SelectValue placeholder={formData.state ? (loadingLgas ? 'Loading LGAs...' : 'Select LGA') : 'Select state first'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {lgas.map((lga) => (
+                              <SelectItem key={lga} value={lga}>
+                                {lga}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="state">State *</Label>
-                        <Input
-                          id="state"
-                          value={formData.state || ''}
-                          onChange={(e) => handleInputChange('state', e.target.value)}
-                          required
-                          placeholder="Enter your state"
-                        />
+                        <Select value={matchCanonicalState(formData.state)} onValueChange={(value) => handleStateChange(value)}>
+                          <SelectTrigger id="state">
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {states.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="graduation_year">Graduation Session *</Label>
