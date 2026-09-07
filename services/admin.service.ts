@@ -840,6 +840,71 @@ class AdminService {
     return response.data;
   }
 
+  // Nerd review methods (reconcile CGPA, class of degree, graduation date/session)
+  async getNerdReviewMatches(fileName?: string) {
+    const params = fileName ? { file: fileName } : {};
+    const response = await axiosInstance.get('/api/nysc/admin/nerd-review/matches', {
+      params,
+      timeout: 120000
+    });
+    return response.data;
+  }
+
+  async uploadNerdFile(file: File, sessionId: number, graduationSession: string, graduationDate?: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('session_id', String(sessionId));
+    formData.append('graduation_session', graduationSession);
+    if (graduationDate) {
+      formData.append('graduation_date', graduationDate);
+    }
+    try {
+      const response = await axiosInstance.post('/api/nysc/admin/nerd-review/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000
+      });
+      return response.data;
+    } catch (error: any) {
+      const data = error?.response?.data;
+      if (data && typeof data.message === 'string') {
+        throw new Error(data.message);
+      }
+      if (data && data.errors) {
+        const first = Object.values(data.errors)[0];
+        if (Array.isArray(first) && first.length > 0) {
+          throw new Error(first[0]);
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getNerdFiles() {
+    const response = await axiosInstance.get('/api/nysc/admin/nerd-review/files', {
+      timeout: 60000
+    });
+    return response.data;
+  }
+
+  async deleteNerdFile(fileName: string) {
+    const response = await axiosInstance.delete('/api/nysc/admin/nerd-review/file', {
+      params: { file: fileName },
+      timeout: 60000
+    });
+    return response.data;
+  }
+
+  async applyNerdUpdates(updates: any[], fileName?: string) {
+    const body: any = { updates };
+    if (fileName) {
+      body.file = fileName;
+    }
+    const response = await axiosInstance.post('/api/nysc/admin/nerd-review/apply', body, {
+      timeout: 60000
+    });
+    return response.data;
+  }
+
   // Prepared Lists (storage-only reconciliation against student_nysc)
   async getPreparedLists() {
     const response = await axiosInstance.get('/api/nysc/admin/prepared-lists');

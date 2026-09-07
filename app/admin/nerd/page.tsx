@@ -60,15 +60,15 @@ const FIELDS: { key: keyof NerdStudent; label: string; available: boolean }[] = 
   { key: 'date_of_birth', label: 'Date of Birth', available: true },
   { key: 'state', label: 'State', available: true },
   { key: 'programme_major', label: 'Programme Major', available: true },
-  { key: 'award_title', label: 'Award Title', available: false },
-  { key: 'award_short_title', label: 'Award Short Title', available: false },
-  { key: 'programme_award_combined', label: 'Programme Award Combined', available: false },
-  { key: 'programme_category', label: 'Programme Category', available: false },
+  { key: 'award_title', label: 'Award Title', available: true },
+  { key: 'award_short_title', label: 'Award Short Title', available: true },
+  { key: 'programme_award_combined', label: 'Programme Award Combined', available: true },
+  { key: 'programme_category', label: 'Programme Category', available: true },
   { key: 'programme_type', label: 'Programme Type', available: true },
   { key: 'class_of_degree_text', label: 'Class of Degree', available: true },
   { key: 'final_cgpa', label: 'Final CGPA', available: true },
   { key: 'graduation_session', label: 'Graduation Session', available: true },
-  { key: 'graduation_date', label: 'Graduation Date', available: false },
+  { key: 'graduation_date', label: 'Graduation Date', available: true },
   { key: 'grade_approval_date', label: 'Grade Approval Date', available: false },
   { key: 'admission_date', label: 'Admission Date', available: true },
   { key: 'mode_of_entry', label: 'Mode of Entry', available: true },
@@ -175,7 +175,7 @@ const NerdPage: React.FC = () => {
                     Nerd — Student Graduate Records
                   </h1>
                   <p className="text-gray-600 text-xs sm:text-sm lg:text-base mt-2">
-                    Complete student records. Fields marked "—" are not yet available.
+                    Complete student records. Fields marked &quot;—&quot; are not yet available.
                   </p>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3">

@@ -198,6 +198,11 @@ const adminNavItems: NavItem[] = [
     href: '/admin/nerd',
     icon: Brain,
   },
+  {
+    title: 'Nerd Review',
+    href: '/admin/nerd-review',
+    icon: Brain,
+  },
 ];
 
 const staffNavItems: NavItem[] = [
@@ -291,6 +296,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           return hasPermission(userRole, 'canManageSystem');
         case '/admin/nerd':
           return user.id === SUPER_ADMIN_STAFF_ID;
+        case '/admin/nerd-review':
+          return hasPermission(userRole, 'canManageSystem');
         default:
           return true;
       }
