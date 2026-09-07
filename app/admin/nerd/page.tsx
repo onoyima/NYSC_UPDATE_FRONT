@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Search, Brain, Download, Link2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import adminService from '@/services/admin.service';
-import { SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
+import { SUPER_ADMIN_STAFF_ID, isNerdViewerRole } from '@/utils/rolePermissions';
 import { useRouter } from 'next/navigation';
 
 interface NerdStudent {
@@ -86,7 +86,7 @@ const KEY_FIELDS: (keyof NerdStudent)[] = [
 ];
 
 const NerdPage: React.FC = () => {
-  const { user, userType, isLoading } = useAuth();
+  const { user, userType, userRole, isLoading } = useAuth();
   const router = useRouter();
   const [students, setStudents] = useState<NerdStudent[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -97,11 +97,16 @@ const NerdPage: React.FC = () => {
   const [sessionId, setSessionId] = useState('');
   const pageSize = 20;
 
+  // Nerd-only staff (nerd_viewer role) plus the super admin may access this page.
+  // Everyone else is sent away.
   useEffect(() => {
-    if (!isLoading && user && userType === 'admin' && (user as any).id !== SUPER_ADMIN_STAFF_ID) {
-      router.replace('/staff');
+    if (!isLoading && user && userType === 'admin') {
+      const isNerdAllowed = isNerdViewerRole(userRole) || (user as any).id === SUPER_ADMIN_STAFF_ID;
+      if (!isNerdAllowed) {
+        router.replace('/staff');
+      }
     }
-  }, [user, userType, isLoading]);
+  }, [user, userType, userRole, isLoading]);
 
   // Load sessions and honour the admin's global session choice. '' = All Sessions.
   useEffect(() => {

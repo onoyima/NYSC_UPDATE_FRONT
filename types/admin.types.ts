@@ -47,7 +47,7 @@ export interface MonthlyTrend {
   count: number;
 }
 
-export type AdminRole = 'super_admin' | 'admin' | 'sub_admin' | 'manager';
+export type AdminRole = 'super_admin' | 'admin' | 'sub_admin' | 'manager' | 'nerd_viewer';
 
 export interface RolePermissions {
   canViewStudentNysc: boolean;
@@ -62,6 +62,7 @@ export interface RolePermissions {
   canAssignRoles: boolean;
   canViewAnalytics: boolean;
   canManageSystem: boolean;
+  canViewNerdData: boolean;
 }
 
 export interface AdminUserWithRole {

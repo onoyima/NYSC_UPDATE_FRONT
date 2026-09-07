@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { AuthContextType, Student, AdminUser, LoginCredentials, UserType, AdminRole, RolePermissions } from '@/types/auth.types';
-import { getUserRole, getRolePermissions, hasPermission } from '@/utils/rolePermissions';
+import { getUserRole, getRolePermissions, hasPermission, getUserRoleByEmail } from '@/utils/rolePermissions';
 import authService from '@/services/auth.service';
 import { toast } from 'sonner';
 
@@ -158,7 +158,7 @@ const ACTIVITY_CHECK_INTERVAL = 5 * 60 * 1000; // You can adjust this if needed
           
           if (userType === 'admin' && user) {
             const adminUser = user as AdminUser;
-            userRole = getUserRole(adminUser.id); // Using id as staff_id for now
+            userRole = getUserRoleByEmail(adminUser.email) ?? getUserRole(adminUser.id);
             userPermissions = getRolePermissions(userRole);
           }
           
@@ -220,7 +220,8 @@ const ACTIVITY_CHECK_INTERVAL = 5 * 60 * 1000; // You can adjust this if needed
       
       if (response.userType === 'admin') {
         const adminUser = response.user as AdminUser;
-        userRole = getUserRole(adminUser.id); // Using id as staff_id for now
+        // Prefer an email-bound role (e.g. nerd-only), fall back to the staff ID role.
+        userRole = getUserRoleByEmail(adminUser.email) ?? getUserRole(adminUser.id);
         userPermissions = getRolePermissions(userRole);
       }
 

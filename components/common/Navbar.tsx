@@ -13,7 +13,7 @@ import { useSidebar } from '@/contexts/SidebarContext';
 import { Moon, Sun, Monitor, LogOut, User, Settings, Bell, Search, Menu, Calendar, RefreshCw } from 'lucide-react';
 import { getInitials } from '@/utils/formatters';
 import adminService from '@/services/admin.service';
-import { SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
+import { SUPER_ADMIN_STAFF_ID, isNerdViewerRole, getUserRole } from '@/utils/rolePermissions';
 import { toast } from 'sonner';
 
 interface NavbarProps {
@@ -27,7 +27,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onSidebarToggle,
   isSidebarCollapsed = false 
 }) => {
-  const { user, userType: authUserType, logout } = useAuth();
+  const { user, userType: authUserType, userRole, logout } = useAuth();
   const userType = propUserType || authUserType;
   const { theme, setTheme } = useTheme();
   const { toggleMobileSidebar } = useSidebar();
@@ -91,7 +91,7 @@ const Navbar: React.FC<NavbarProps> = ({
           
           {/* Logo */}
           <Link 
-            href={userType === 'admin' ? '/admin' : '/student'} 
+            href={userType === 'admin' ? (isNerdViewerRole(userRole ?? getUserRole((user as any)?.id ?? 0)) ? '/admin/nerd' : '/admin') : '/student'} 
             className="flex items-center gap-2 font-bold text-lg"
           >
             <img 

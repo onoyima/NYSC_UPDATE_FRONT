@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { hasPermission, getUserRole, SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
+import { hasPermission, getUserRole, SUPER_ADMIN_STAFF_ID, isNerdViewerRole } from '@/utils/rolePermissions';
 import { useSession } from '@/contexts/SessionContext';
 import { 
   Select, 
@@ -232,7 +232,7 @@ const staffNavItems: NavItem[] = [
 const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
-  const { userType, user } = useAuth();
+  const { userType, user, userRole } = useAuth();
   const { isMobileOpen, closeMobileSidebar } = useSidebar();
   
   // Conditionally use session context (it's only provided in AdminLayout)
@@ -246,64 +246,77 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const { sessions, selectedSession, selectSession } = sessionContext || { sessions: [], selectedSession: null };
 
   // Filter admin navigation items based on user permissions
-  const getFilteredAdminNavItems = () => {
+  const getFilteredAdminNavItems = (): NavItem[] => {
     if (!user?.id) {
       return [];
+    }
+
+    // Use the auth context role (email-aware) so nerd-only staff are detected
+    // even before their staff ID is known.
+    const activeRole = userRole ?? getUserRole(user.id);
+
+    // Nerd-only staff: only the Nerd records page is available.
+    if (isNerdViewerRole(activeRole)) {
+      return [
+        {
+          title: 'Nerd Records',
+          href: '/admin/nerd',
+          icon: Brain,
+        },
+      ];
     }
 
     // Non-super-admin staff get a limited sidebar
     if (user.id !== SUPER_ADMIN_STAFF_ID) {
       return staffNavItems;
     }
-    
-    const userRole = getUserRole(user.id);
-    
+
     const filteredItems = adminNavItems.filter(item => {
       switch (item.href) {
         case '/admin':
           return true;
         case '/admin/students':
-          return hasPermission(userRole, 'canViewStudentNysc');
+          return hasPermission(activeRole, 'canViewStudentNysc');
         case '/admin/students-list':
           return true;
         case '/admin/manage-data':
-          return hasPermission(userRole, 'canViewStudentNysc');
+          return hasPermission(activeRole, 'canViewStudentNysc');
         case '/admin/payments':
-          return hasPermission(userRole, 'canViewPayments');
+          return hasPermission(activeRole, 'canViewPayments');
         case '/admin/payment-statistics':
-          return hasPermission(userRole, 'canViewPayments');
+          return hasPermission(activeRole, 'canViewPayments');
         case '/admin/pending-payments':
-          return hasPermission(userRole, 'canViewPayments');
+          return hasPermission(activeRole, 'canViewPayments');
         case '/admin/duplicate-payments':
           return user.id === SUPER_ADMIN_STAFF_ID;
         case '/admin/submissions':
-          return hasPermission(userRole, 'canViewTempSubmissions');
+          return hasPermission(activeRole, 'canViewTempSubmissions');
         case '/admin/exports':
-          return hasPermission(userRole, 'canDownloadData');
+          return hasPermission(activeRole, 'canDownloadData');
         case '/admin/docx-import':
-          return hasPermission(userRole, 'canManageSystem');
+          return hasPermission(activeRole, 'canManageSystem');
         case '/admin/graduands-review':
-          return hasPermission(userRole, 'canManageSystem');
+          return hasPermission(activeRole, 'canManageSystem');
         case '/admin/csv-export':
-          return hasPermission(userRole, 'canDownloadData');
+          return hasPermission(activeRole, 'canDownloadData');
         case '/admin/null-degree-export':
-          return hasPermission(userRole, 'canDownloadData');
+          return hasPermission(activeRole, 'canDownloadData');
         case '/admin/data-analysis':
-          return hasPermission(userRole, 'canViewAnalytics');
+          return hasPermission(activeRole, 'canViewAnalytics');
         case '/admin/upload-analysis':
-          return hasPermission(userRole, 'canViewAnalytics');
+          return hasPermission(activeRole, 'canViewAnalytics');
         case '/admin/admin-users':
-          return hasPermission(userRole, 'canAssignRoles');
+          return hasPermission(activeRole, 'canAssignRoles');
         case '/admin/roles':
-          return hasPermission(userRole, 'canAssignRoles');
+          return hasPermission(activeRole, 'canAssignRoles');
         case '/admin/sessions':
-          return hasPermission(userRole, 'canManageSystem');
+          return hasPermission(activeRole, 'canManageSystem');
         case '/admin/settings':
-          return hasPermission(userRole, 'canManageSystem');
+          return hasPermission(activeRole, 'canManageSystem');
         case '/admin/nerd':
-          return user.id === SUPER_ADMIN_STAFF_ID;
+          return user.id === SUPER_ADMIN_STAFF_ID || isNerdViewerRole(activeRole);
         case '/admin/nerd-review':
-          return hasPermission(userRole, 'canManageSystem');
+          return hasPermission(activeRole, 'canManageSystem');
         default:
           return true;
       }
@@ -313,7 +326,9 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   };
 
   const navItems = userType === 'admin' ? getFilteredAdminNavItems() : studentNavItems;
-  const dashboardHref = userType === 'admin' && user?.id !== SUPER_ADMIN_STAFF_ID ? '/staff' : (userType === 'admin' ? '/admin' : '/student');
+  const dashboardHref = userType === 'admin'
+    ? (isNerdViewerRole(userRole ?? getUserRole(user?.id ?? 0)) ? '/admin/nerd' : (user?.id !== SUPER_ADMIN_STAFF_ID ? '/staff' : '/admin'))
+    : '/student';
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);

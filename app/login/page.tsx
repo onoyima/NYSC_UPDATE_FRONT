@@ -21,7 +21,7 @@ import { loginSchema } from '@/utils/validators';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Eye, EyeOff } from 'lucide-react';
 import * as yup from 'yup';
-import { SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
+import { SUPER_ADMIN_STAFF_ID, isNerdViewerStaffByEmail } from '@/utils/rolePermissions';
 import { AdminUser } from '@/types/auth.types';
 
 const LoginPage: React.FC = () => {
@@ -54,6 +54,8 @@ const LoginPage: React.FC = () => {
           const adminUser = response.user as AdminUser;
           if (adminUser?.id === SUPER_ADMIN_STAFF_ID) {
             router.replace('/admin');
+          } else if (isNerdViewerStaffByEmail(adminUser.email)) {
+            router.replace('/admin/nerd');
           } else {
             router.replace('/staff');
           }

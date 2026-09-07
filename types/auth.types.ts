@@ -7,7 +7,8 @@ export const roleDisplayNames: Record<AdminRole, string> = {
   super_admin: 'Super Administrator',
   admin: 'Administrator',
   sub_admin: 'Sub Administrator',
-  manager: 'Manager'
+  manager: 'Manager',
+  nerd_viewer: 'Nerd Viewer'
 };
 
 export interface LoginCredentials {

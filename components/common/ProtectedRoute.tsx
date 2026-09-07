@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { isNerdViewerRole } from '@/utils/rolePermissions';
 import LoadingSpinner from './LoadingSpinner';
 
 interface ProtectedRouteProps {
@@ -11,10 +12,20 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, userType }) => {
-  const { isAuthenticated, isLoading, userType: currentUserType } = useAuth();
+  const { isAuthenticated, isLoading, userType: currentUserType, userRole } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
+    // Nerd-only staff may only ever be on the Nerd records page. Any other
+    // route is intercepted and bounced back there.
+    if (!isLoading && isAuthenticated && currentUserType === 'admin' && isNerdViewerRole(userRole)) {
+      const path = typeof window !== 'undefined' ? window.location.pathname : '';
+      if (path !== '/admin/nerd' && !path.startsWith('/admin/nerd/')) {
+        router.replace('/admin/nerd');
+        return;
+      }
+    }
+
     if (!isLoading && !isAuthenticated) {
       // Only when the page was opened through a shared link (?via=link) should the
       // student be returned here after logging in. Other visits keep the old flow.
@@ -40,7 +51,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, userType }) =
         router.push('/student');
       }
     }
-  }, [isAuthenticated, isLoading, userType, currentUserType, router]);
+  }, [isAuthenticated, isLoading, userType, currentUserType, userRole, router]);
 
   if (isLoading) {
     return (

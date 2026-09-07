@@ -126,7 +126,8 @@ const RoleManagement: React.FC = () => {
       admin: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
       sub_admin: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
       manager: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-      super_admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
+      super_admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+      nerd_viewer: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/20 dark:text-fuchsia-400'
     };
 
     return (

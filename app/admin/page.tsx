@@ -22,7 +22,7 @@ import { formatDate } from '@/utils/formatters';
 import { User, Mail, Phone, MapPin, Briefcase, Heart, Users, FileText, BarChart3, Settings, TrendingUp, Activity, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import adminService from '@/services/admin.service';
-import { SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
+import { SUPER_ADMIN_STAFF_ID, isNerdViewerRole } from '@/utils/rolePermissions';
 
 
 const AdminDashboard: React.FC = () => {
@@ -30,12 +30,18 @@ const AdminDashboard: React.FC = () => {
   const router = useRouter();
   const [admin, setAdmin] = useState<AdminUser | null>(null);
 
-  // Redirect non-super-admin staff to staff dashboard
+  // Redirect non-super-admin staff to their dashboard (nerd-only staff to the Nerd page)
   useEffect(() => {
-    if (!isLoading && user && userType === 'admin' && (user as AdminUser).id !== SUPER_ADMIN_STAFF_ID) {
-      router.replace('/staff');
+    if (!isLoading && user && userType === 'admin') {
+      const id = (user as AdminUser).id;
+      if (id === SUPER_ADMIN_STAFF_ID) return;
+      if (isNerdViewerRole(userRole)) {
+        router.replace('/admin/nerd');
+      } else {
+        router.replace('/staff');
+      }
     }
-  }, [user, userType, isLoading]);
+  }, [user, userType, userRole, isLoading]);
 
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
