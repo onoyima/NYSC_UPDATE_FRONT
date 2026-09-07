@@ -93,6 +93,8 @@ const NerdPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [sessions, setSessions] = useState<{ id: number; name: string; is_active?: boolean }[]>([]);
+  const [sessionId, setSessionId] = useState('');
   const pageSize = 20;
 
   useEffect(() => {
@@ -101,10 +103,33 @@ const NerdPage: React.FC = () => {
     }
   }, [user, userType, isLoading]);
 
+  // Load sessions and honour the admin's global session choice. '' = All Sessions.
+  useEffect(() => {
+    if (!user || userType !== 'admin') return;
+    const stored = localStorage.getItem('admin_selected_session_id');
+    if (stored) setSessionId(stored);
+    adminService.getSessions()
+      .then((res) => {
+        const list = res?.sessions || [];
+        setSessions(list);
+        if (!stored) {
+          const active = list.find((s: any) => s.is_active);
+          if (active) setSessionId(String(active.id));
+        }
+      })
+      .catch((error) => console.error('Failed to load sessions:', error));
+  }, [user, userType]);
+
+  useEffect(() => {
+    if (user && userType === 'admin' && sessionId !== null) {
+      localStorage.setItem('admin_selected_session_id', sessionId);
+    }
+  }, [user, userType, sessionId]);
+
   const fetchData = async () => {
     setIsLoadingData(true);
     try {
-      const response = await adminService.getNerdStudents(search || undefined);
+      const response = await adminService.getNerdStudents(search || undefined, sessionId);
       setStudents(response.data || []);
     } catch (error: any) {
       console.error('Failed to fetch nerd data:', error);
@@ -118,11 +143,16 @@ const NerdPage: React.FC = () => {
     if (user && userType === 'admin') {
       fetchData();
     }
-  }, [user, userType]);
+  }, [user, userType, sessionId]);
 
   const handleSearch = () => {
     setCurrentPage(1);
     fetchData();
+  };
+
+  const handleSessionChange = (value: string) => {
+    setCurrentPage(1);
+    setSessionId(value);
   };
 
   const totalPages = Math.ceil(students.length / pageSize);
@@ -137,7 +167,7 @@ const NerdPage: React.FC = () => {
   const exportExcel = async (format: 'excel' | 'csv') => {
     try {
       setIsLoadingData(true);
-      const blob = await adminService.exportNerdStudents(search || undefined, format);
+      const blob = await adminService.exportNerdStudents(search || undefined, format, sessionId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -185,6 +215,17 @@ const NerdPage: React.FC = () => {
                   <Badge variant="outline" className="text-xs">
                     {students.length} records
                   </Badge>
+                  <select
+                    value={sessionId}
+                    onChange={(e) => handleSessionChange(e.target.value)}
+                    className="bg-white border border-gray-300 rounded-lg text-sm px-3 py-2 outline-none focus:ring-2 focus:ring-purple-600 text-gray-700 shadow-sm"
+                    title="Filter by NYSC session"
+                  >
+                    <option value="">All Sessions</option>
+                    {sessions.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
                   <Button variant="outline" size="sm" onClick={() => exportExcel('csv')}>
                     <Download className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">Export CSV</span>
