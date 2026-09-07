@@ -41,7 +41,15 @@ const LoginPage: React.FC = () => {
       if (response && response.userType && response.token) {
         // Use replace instead of push to prevent back navigation issues
         if (response.userType === 'student') {
-          router.replace('/student');
+          // Return to the page the student came from (only a shared ?via=link
+          // hand-off carries a redirect). Default to the student dashboard.
+          let redirect = '';
+          if (typeof window !== 'undefined') {
+            redirect = new URLSearchParams(window.location.search).get('redirect') || '';
+          }
+          const isSafeStudentRedirect =
+            redirect.startsWith('/student') && !redirect.startsWith('//') && !redirect.includes('\\');
+          router.replace(isSafeStudentRedirect ? redirect : '/student');
         } else if (response.userType === 'admin') {
           const adminUser = response.user as AdminUser;
           if (adminUser?.id === SUPER_ADMIN_STAFF_ID) {

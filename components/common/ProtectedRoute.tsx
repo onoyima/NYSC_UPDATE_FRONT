@@ -16,7 +16,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, userType }) =
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      // Only when the page was opened through a shared link (?via=link) should the
+      // student be returned here after logging in. Other visits keep the old flow.
+      let redirect = '';
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('via') === 'link') {
+          redirect = window.location.pathname + window.location.search;
+        }
+      }
+      if (redirect) {
+        router.replace(`/login?redirect=${encodeURIComponent(redirect)}`);
+      } else {
+        router.push('/login');
+      }
       return;
     }
 

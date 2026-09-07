@@ -10,7 +10,7 @@ import Sidebar from '@/components/common/Sidebar';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, Brain, Download, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Brain, Download, Link2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import adminService from '@/services/admin.service';
 import { SUPER_ADMIN_STAFF_ID } from '@/utils/rolePermissions';
@@ -164,6 +164,17 @@ const NerdPage: React.FC = () => {
     return String(val);
   };
 
+  const copyShareLink = async () => {
+    try {
+      const url = `${window.location.origin}/student/nerd-details?via=link`;
+      await navigator.clipboard.writeText(url);
+      toast.success('Student link copied');
+    } catch (error) {
+      console.error('Copy link error:', error);
+      toast.error('Could not copy link');
+    }
+  };
+
   const exportExcel = async (format: 'excel' | 'csv') => {
     try {
       setIsLoadingData(true);
@@ -226,6 +237,10 @@ const NerdPage: React.FC = () => {
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
+                  <Button variant="outline" size="sm" onClick={copyShareLink} title="Copy student share link">
+                    <Link2 className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Copy Link</span>
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => exportExcel('csv')}>
                     <Download className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">Export CSV</span>
