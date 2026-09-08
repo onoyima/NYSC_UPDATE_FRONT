@@ -58,6 +58,10 @@ const FIELD_CONFIG: FieldConfig[] = [
   { key: 'admission_date', label: 'Admission Date', type: 'date', hint: 'Enter the exact date shown on the admission letter issued to you by the school.' },
 ];
 
+const FIELD_LABELS: Record<string, string> = Object.fromEntries(
+  FIELD_CONFIG.map((config) => [config.key, config.label])
+);
+
 // Backend stores dates as Y-m-d; display them as dd/mm/yyyy.
 function toDisplayValue(field: NerdField | undefined, config: FieldConfig): string {
   const value = field?.value ?? '';
@@ -85,6 +89,7 @@ const NerdDetailsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState<Record<string, NerdField>>({});
   const [missingCount, setMissingCount] = useState(0);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   const [complete, setComplete] = useState(false);
   const [states, setStates] = useState<string[]>(NIGERIA_STATES);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -115,6 +120,7 @@ const NerdDetailsPage: React.FC = () => {
       const data = response.data;
       setFields(data.fields || {});
       setMissingCount(data.missing_count || 0);
+      setMissingFields(Array.isArray(data.missing_fields) ? data.missing_fields : []);
       setComplete(!!data.complete);
       setEditingKey(null);
       setEditValue('');
@@ -160,6 +166,7 @@ const NerdDetailsPage: React.FC = () => {
       if (response.success) {
         toast.success(response.message || 'Field corrected successfully.');
         setMissingCount(response.data?.missing_count ?? 0);
+        setMissingFields(Array.isArray(response.data?.missing_fields) ? response.data.missing_fields : []);
         setComplete(response.data?.complete ?? false);
         await fetchNerdDetails();
       } else {
@@ -238,12 +245,12 @@ const NerdDetailsPage: React.FC = () => {
                   )}
                   <div className="flex-1">
                     <p className="font-medium">
-                      {complete ? 'Your nerd record is complete' : `${missingCount} field${missingCount === 1 ? ' is' : 's are'} missing`}
+                      {complete ? 'Your nerd record is complete' : `${missingCount} field${missingCount === 1 ? ' is' : 's are'} missing: ${missingFields.map((key) => FIELD_LABELS[key] || key).join(', ')}`}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {complete
                         ? 'You may still correct any field below, one at a time.'
-                        : 'Add the missing fields below. Fields you edit must match your official records.'}
+                        : 'Fields you edit must match your official records.'}
                     </p>
                   </div>
                 </CardContent>

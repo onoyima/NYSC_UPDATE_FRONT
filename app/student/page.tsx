@@ -108,6 +108,13 @@ const StudentDashboard: React.FC = () => {
 
   const student = studentData || user as Student;
 
+  // Students who have submitted (finalized record, pending confirmation, or a
+  // stored submission token) no longer see the payment/deadline card.
+  const hasSubmitted =
+    !!student.isDataConfirmed ||
+    student.nysc_data?.is_temp_submission === true ||
+    !!student.nysc_data?.submission_token;
+
   const getUpdateProgress = () => {
     let progress = 25; // Base update
     if (student.isDataConfirmed) progress += 50;
@@ -162,7 +169,7 @@ const StudentDashboard: React.FC = () => {
                   
                   {/* Mobile Deadline Counter - After welcome message on small screens */}
                   <div className="lg:hidden mb-4">
-                    {systemStatus && (
+                    {systemStatus && !hasSubmitted && (
                       <CountdownTimer
                         deadline={systemStatus.deadline}
                         standardFee={systemStatus.payment_amount}
@@ -177,7 +184,7 @@ const StudentDashboard: React.FC = () => {
                 
                 {/* Desktop Deadline Counter - Sticky on right edge for large screens */}
                 <div className="hidden lg:block lg:fixed lg:right-4 lg:top-24 lg:w-72 lg:z-40">
-                  {systemStatus && (
+                  {systemStatus && !hasSubmitted && (
                     <CountdownTimer
                       deadline={systemStatus.deadline}
                       standardFee={systemStatus.payment_amount}
@@ -191,7 +198,7 @@ const StudentDashboard: React.FC = () => {
               </div>
 
               {/* Analytics Cards */}
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:mr-80">
+              <div className={`grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${hasSubmitted ? '' : 'lg:mr-80'}`}>
                 <Card className="hover-lift animate-fade-in-up" style={{animationDelay: '0.1s'}}>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Submission Status</CardTitle>
