@@ -72,14 +72,18 @@ const StudentDashboard: React.FC = () => {
       // Set analytics data
         setAnalytics(analyticsData);
         
-        // Show the deadline prompt ONLY to students who have never
-        // submitted before: no confirmed flag AND no prior submission
-        // token on their NYSC record (token is issued on final submit,
-        // so returning/revalidation students are never nagged again).
-        const hasSubmittedBefore = !!data?.isDataConfirmed || !!data?.nysc_data?.submission_token;
-        if (systemStatusData && !hasSubmittedBefore) {
-          setShowDeadlineModal(true);
-        }
+// Show the deadline/payment prompt ONLY to students who have not
+      // submitted at all: no finalized submitted record (is_submitted) and no
+      // confirmation pending on file (is_temp_submission / submission_token).
+      // Anyone who went through the confirm-data page or completed payment is
+      // never nagged again, on any screen size.
+      const hasSubmittedAnywhere =
+        !!data?.isDataConfirmed ||
+        data?.nysc_data?.is_temp_submission === true ||
+        !!data?.nysc_data?.submission_token;
+      if (systemStatusData && !hasSubmittedAnywhere) {
+        setShowDeadlineModal(true);
+      }
       } catch (error) {
         toast.error('Failed to load dashboard data');
       } finally {
