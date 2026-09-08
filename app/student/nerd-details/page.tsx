@@ -13,7 +13,7 @@ import ProtectedRoute from '@/components/common/ProtectedRoute';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import studentService from '@/services/student.service';
 import { toast } from 'sonner';
-import { CheckCircle, AlertCircle, Save, Lock, ClipboardCheck } from 'lucide-react';
+import { CheckCircle, AlertCircle, Save, Lock, ClipboardCheck, Pencil, X } from 'lucide-react';
 
 const NIGERIA_STATES = [
   'Abia', 'Adamawa', 'Akwa-Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
@@ -32,6 +32,7 @@ interface NerdField {
   value: string | null;
   is_readonly: boolean;
   editable: boolean;
+  missing?: boolean;
 }
 
 interface FieldConfig {
@@ -45,17 +46,39 @@ interface FieldConfig {
 
 const FIELD_CONFIG: FieldConfig[] = [
   { key: 'nin', label: 'NIN', type: 'text', placeholder: '11-digit NIN', hint: 'Your 11-digit National Identification Number.' },
-  { key: 'matric_no', label: 'Matric Number', type: 'text', placeholder: 'e.g. VUG/SEN/22/8245' },
-  { key: 'student_email', label: 'Email Address', type: 'email', placeholder: 'you@example.com' },
-  { key: 'phone_number', label: 'Phone Number', type: 'tel', placeholder: 'e.g. 09060019184' },
-  { key: 'first_name', label: 'First Name', type: 'text' },
+  { key: 'matric_no', label: 'Matric Number', type: 'text', alwaysReadOnly: true },
+  { key: 'student_email', label: 'Email Address', type: 'email', alwaysReadOnly: true },
+  { key: 'phone_number', label: 'Phone Number', type: 'tel', alwaysReadOnly: true },
+  { key: 'first_name', label: 'First Name', type: 'text', alwaysReadOnly: true },
   { key: 'middle_name', label: 'Middle Name', type: 'text', alwaysReadOnly: true },
-  { key: 'surname', label: 'Surname', type: 'text' },
+  { key: 'surname', label: 'Surname', type: 'text', alwaysReadOnly: true },
   { key: 'sex', label: 'Gender', type: 'select' },
   { key: 'date_of_birth', label: 'Date of Birth', type: 'date' },
   { key: 'state', label: 'State', type: 'state' },
   { key: 'admission_date', label: 'Admission Date', type: 'date', hint: 'Enter the exact date shown on the admission letter issued to you by the school.' },
 ];
+
+// Backend stores dates as Y-m-d; display them as dd/mm/yyyy.
+function toDisplayValue(field: NerdField | undefined, config: FieldConfig): string {
+  const value = field?.value ?? '';
+  if (value === '') return '—';
+  if (config.type === 'date' && /^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(value)) {
+    const [y, m, d] = value.split(/[-/.]/);
+    return `${m}-${d}-${y}`;
+  }
+  return value;
+}
+
+// The HTML date input requires Y-m-d.
+function toEditValue(field: NerdField | undefined, config: FieldConfig): string {
+  const value = field?.value ?? '';
+  if (config.type === 'date' && value) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const m = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  }
+  return value || '';
+}
 
 const NerdDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -63,8 +86,9 @@ const NerdDetailsPage: React.FC = () => {
   const [fields, setFields] = useState<Record<string, NerdField>>({});
   const [missingCount, setMissingCount] = useState(0);
   const [complete, setComplete] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
   const [states, setStates] = useState<string[]>(NIGERIA_STATES);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
   const [accessError, setAccessError] = useState<AccessError | null>(null);
 
   useEffect(() => {
@@ -92,16 +116,8 @@ const NerdDetailsPage: React.FC = () => {
       setFields(data.fields || {});
       setMissingCount(data.missing_count || 0);
       setComplete(!!data.complete);
-
-      // Initialise the editable form fields (empty -> missing field to fill).
-      const initial: Record<string, any> = {};
-      Object.keys(data.fields || {}).forEach((key) => {
-        const f = data.fields[key];
-        if (f?.editable) {
-          initial[key] = '';
-        }
-      });
-      setFormData(initial);
+      setEditingKey(null);
+      setEditValue('');
     } catch (error: any) {
       if (error?.response?.status === 403) {
         const code = error?.response?.data?.error_code;
@@ -120,30 +136,29 @@ const NerdDetailsPage: React.FC = () => {
     }
   };
 
-  const handleChange = (key: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+  const startEdit = (config: FieldConfig) => {
+    setEditValue(toEditValue(fields[config.key], config));
+    setEditingKey(config.key);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload: Record<string, any> = {};
-    Object.keys(formData).forEach((key) => {
-      const v = (formData[key] ?? '').toString().trim();
-      if (v !== '') {
-        payload[key] = v;
-      }
-    });
+  const cancelEdit = () => {
+    setEditingKey(null);
+    setEditValue('');
+  };
 
-    if (Object.keys(payload).length === 0) {
-      toast.info('No missing fields to update.');
+  const handleSaveEdit = async () => {
+    if (!editingKey) return;
+    const value = (editValue ?? '').toString().trim();
+    if (value === '') {
+      toast.error('Value cannot be empty. Cancel to keep the current value.');
       return;
     }
 
     setSaving(true);
     try {
-      const response = await studentService.updateNerdDetails(payload);
+      const response = await studentService.updateNerdDetails({ [editingKey]: value });
       if (response.success) {
-        toast.success(response.message || 'Nerd details updated successfully.');
+        toast.success(response.message || 'Field corrected successfully.');
         setMissingCount(response.data?.missing_count ?? 0);
         setComplete(response.data?.complete ?? false);
         await fetchNerdDetails();
@@ -151,9 +166,9 @@ const NerdDetailsPage: React.FC = () => {
         toast.error(response.message || 'Update failed');
       }
     } catch (error: any) {
-      const msg = error?.response?.data?.message || error?.response?.data?.errors
-        ? Object.values(error.response.data.errors).flat().join(', ')
-        : 'Update failed. Please check the entered values.';
+      const errors = error?.response?.data?.errors;
+      const msg = error?.response?.data?.message
+        || (errors ? Object.values(errors).flat().join(', ') : 'Update failed. Please check the entered value.');
       toast.error(msg);
     } finally {
       setSaving(false);
@@ -192,8 +207,7 @@ const NerdDetailsPage: React.FC = () => {
     );
   }
 
-  const readOnlyFields = FIELD_CONFIG.filter((f) => f.alwaysReadOnly || (fields[f.key] && !fields[f.key].editable));
-  const editableFields = FIELD_CONFIG.filter((f) => !f.alwaysReadOnly && fields[f.key]?.editable);
+  const visibleFields = FIELD_CONFIG.filter((config) => fields[config.key]);
 
   return (
     <ProtectedRoute userType="student">
@@ -210,7 +224,7 @@ const NerdDetailsPage: React.FC = () => {
                   Nerd Details
                 </h1>
                 <p className="text-muted-foreground animate-slide-in-right">
-                  Verify and complete your graduate record. Only missing fields are editable.
+                  You can correct NIN, Gender, Date of Birth, State and Admission Date — one field at a time.
                 </p>
               </div>
 
@@ -228,130 +242,149 @@ const NerdDetailsPage: React.FC = () => {
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {complete
-                        ? 'All required details are filled and cannot be edited.'
-                        : 'Complete the missing fields below. Fields you edit must match your official records.'}
+                        ? 'You may still correct any field below, one at a time.'
+                        : 'Add the missing fields below. Fields you edit must match your official records.'}
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <form onSubmit={handleSubmit}>
-                {/* Read-only fields */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lock className="h-5 w-5" />
-                      Already Filled (Read-only)
-                    </CardTitle>
-                    <CardDescription>
-                      These details are already stored and cannot be changed here.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-4 md:grid-cols-2">
-                    {readOnlyFields.map((config) => {
-                      const field = fields[config.key];
-                      const value = field?.value ?? '';
+              {/* Your record */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5" />
+                    Your Graduate Record
+                  </CardTitle>
+                  <CardDescription>
+                    Correct one field at a time using the edit button. Saving a correction does not require any payment.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {visibleFields.map((config) => {
+                    const field = fields[config.key];
+                    const readOnly = config.alwaysReadOnly || !field?.editable;
+                    const isEditing = editingKey === config.key;
+                    const missing = field?.missing && !readOnly;
+
+                    if (readOnly) {
                       return (
-                        <div key={config.key} className="space-y-2">
-                          <Label htmlFor={`ro-${config.key}`}>{config.label}</Label>
-                          <Input
-                            id={`ro-${config.key}`}
-                            value={value}
-                            disabled
-                            readOnly
-                            className="bg-muted"
-                          />
+                        <div
+                          key={config.key}
+                          className="flex flex-col md:flex-row md:items-center justify-between gap-2 border rounded-lg p-3 bg-muted/40"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-sm font-medium">{config.label}</Label>
+                              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">{toDisplayValue(field, config)}</p>
+                          </div>
+                          <span className="text-xs text-muted-foreground shrink-0">Read-only</span>
                         </div>
                       );
-                    })}
-                    {readOnlyFields.length === 0 && (
-                      <p className="text-sm text-muted-foreground col-span-full">
-                        No pre-filled details found.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                    }
 
-                {/* Editable (missing) fields */}
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <ClipboardCheck className="h-5 w-5" />
-                      Missing Details
-                    </CardTitle>
-                    <CardDescription>
-                      Fill in the fields below that are missing from your record. This does not require any payment.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-4 md:grid-cols-2">
-                    {editableFields.map((config) => (
-                      <div key={config.key} className="space-y-2">
-                        <Label htmlFor={`ed-${config.key}`}>{config.label} {!['sex'].includes(config.key) && <span className="text-red-500">*</span>}</Label>
-                        {config.type === 'select' ? (
-                          <Select
-                            value={formData[config.key] || ''}
-                            onValueChange={(val) => handleChange(config.key, val)}
-                          >
-                            <SelectTrigger id={`ed-${config.key}`}>
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Male">Male</SelectItem>
-                              <SelectItem value="Female">Female</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : config.type === 'state' ? (
-                          <>
-                            <Input
-                              id={`ed-${config.key}`}
-                              value={formData[config.key] || ''}
-                              onChange={(e) => handleChange(config.key, e.target.value)}
-                              list="nigeria-states"
-                              placeholder="Select or type your state"
-                              required
-                            />
-                            <datalist id="nigeria-states">
-                              {states.map((s) => (
-                                <option key={s} value={s} />
-                              ))}
-                            </datalist>
-                          </>
-                        ) : (
-                          <Input
-                            id={`ed-${config.key}`}
-                            type={config.type === 'date' ? 'date' : config.type}
-                            inputMode={config.key === 'nin' ? 'numeric' : undefined}
-                            maxLength={config.key === 'nin' ? 11 : undefined}
-                            value={formData[config.key] || ''}
-                            onChange={(e) => handleChange(config.key, e.target.value)}
-                            placeholder={config.placeholder}
-                            required
-                          />
-                        )}
-                        {config.hint && (
-                          <Badge variant="outline" className="text-xs font-normal text-muted-foreground whitespace-normal h-auto py-1">
-                            {config.hint}
-                          </Badge>
+                    return (
+                      <div
+                        key={config.key}
+                        className="border rounded-lg p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-sm font-medium">{config.label}</Label>
+                              {missing && (
+                                <Badge variant="outline" className="text-xs border-yellow-300 text-yellow-600">
+                                  Missing
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">{toDisplayValue(field, config)}</p>
+                          </div>
+                          {!isEditing && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => startEdit(config)}
+                              disabled={saving}
+                            >
+                              {missing ? 'Add' : 'Edit'}
+                              <Pencil className="ml-2 h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+
+                        {isEditing && (
+                          <div className="mt-3 space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor={`edit-${config.key}`}>New value</Label>
+                              {config.type === 'select' ? (
+                                <Select
+                                  value={editValue}
+                                  onValueChange={(val) => setEditValue(val)}
+                                >
+                                  <SelectTrigger id={`edit-${config.key}`}>
+                                    <SelectValue placeholder="Select" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Male">Male</SelectItem>
+                                    <SelectItem value="Female">Female</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : config.type === 'state' ? (
+                                <>
+                                  <Input
+                                    id={`edit-${config.key}`}
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    list="nigeria-states"
+                                    placeholder="Select or type your state"
+                                  />
+                                  <datalist id="nigeria-states">
+                                    {states.map((s) => (
+                                      <option key={s} value={s} />
+                                    ))}
+                                  </datalist>
+                                </>
+                              ) : (
+                                <Input
+                                  id={`edit-${config.key}`}
+                                  type={config.type === 'date' ? 'date' : config.type}
+                                  inputMode={config.key === 'nin' ? 'numeric' : undefined}
+                                  maxLength={config.key === 'nin' ? 11 : undefined}
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  placeholder={config.placeholder}
+                                />
+                              )}
+                            </div>
+                            {config.hint && (
+                              <Badge variant="outline" className="text-xs font-normal text-muted-foreground whitespace-normal h-auto py-1">
+                                {config.hint}
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <Button type="button" size="sm" onClick={handleSaveEdit} disabled={saving}>
+                                {saving ? 'Saving...' : 'Save Correction'}
+                                <Save className="ml-2 h-4 w-4" />
+                              </Button>
+                              <Button type="button" variant="ghost" size="sm" onClick={cancelEdit} disabled={saving}>
+                                Cancel
+                                <X className="ml-2 h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
                         )}
                       </div>
-                    ))}
-                    {editableFields.length === 0 && (
-                      <div className="col-span-full text-center py-6">
-                        <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                        <p className="text-muted-foreground">All details are complete. Nothing to update.</p>
-                      </div>
-                    )}
-                  </CardContent>
-                  {editableFields.length > 0 && (
-                    <CardContent className="pt-0">
-                      <Button type="submit" className="w-full md:w-auto" disabled={saving}>
-                        {saving ? 'Saving...' : 'Save Missing Details'}
-                        <Save className="ml-2 h-4 w-4" />
-                      </Button>
-                    </CardContent>
+                    );
+                  })}
+
+                  {visibleFields.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No record fields found.</p>
                   )}
-                </Card>
-              </form>
+                </CardContent>
+              </Card>
             </div>
           </main>
         </div>
